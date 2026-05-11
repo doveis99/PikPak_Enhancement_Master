@@ -660,7 +660,7 @@
     "str_bl_stat": "比對：{n} 項 | 已選取：{m} 項",
     "str_hits": "命中",
     "msg_settings_saved": "設定已儲存。頁面將重新整理。",
-    "msg_script_update_new": "偵測到新版 V{v} 。受發布體積限制可能無法自動更新，可前往 GitHub 專案首頁查看更新日誌與開發版說明。",
+    "msg_script_update_new": "偵測到新版 V{v}。受發布體積限制，目前版本可能無法自動同步完整更新，可前往 GitHub 專案主頁查看更新日誌與專案說明。",
     "msg_script_update_open": "查看說明",
     "label_script_update_info": "版本資訊",
     "label_script_current_version": "目前版本",
