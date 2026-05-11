@@ -660,7 +660,7 @@
     "str_bl_stat": "Padan: {n} item | Dipilih: {m} item",
     "str_hits": "Kena",
     "msg_settings_saved": "Tetapan telah disimpan. Halaman akan dimuat semula.",
-    "msg_script_update_new": "Versi baharu V{v} dikesan. Disebabkan had saiz terbitan, kemas kini automatik mungkin tidak tersedia. Anda boleh membuka halaman projek GitHub untuk melihat changelog dan nota binaan pembangunan.",
+    "msg_script_update_new": "Versi baharu V{v} dikesan. Disebabkan had saiz keluaran, versi semasa mungkin tidak dapat menyegerakkan kemas kini penuh secara automatik. Anda boleh pergi ke halaman projek GitHub untuk melihat log kemas kini dan penerangan projek.",
     "msg_script_update_open": "Lihat Butiran",
     "label_script_update_info": "Maklumat Versi",
     "label_script_current_version": "Versi Semasa",
