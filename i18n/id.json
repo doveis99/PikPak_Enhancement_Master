@@ -660,7 +660,7 @@
     "str_bl_stat": "Cocok: {n} item | Dipilih: {m} item",
     "str_hits": "Kena",
     "msg_settings_saved": "Pengaturan telah disimpan. Halaman akan dimuat ulang.",
-    "msg_script_update_new": "Versi baru V{v} terdeteksi. Karena batas ukuran rilis, pembaruan otomatis mungkin tidak tersedia. Anda dapat membuka halaman proyek GitHub untuk melihat changelog dan catatan build pengembangan.",
+    "msg_script_update_new": "Versi baru V{v} terdeteksi. Karena batas ukuran rilis, versi saat ini mungkin tidak dapat menyinkronkan pembaruan lengkap secara otomatis. Anda dapat membuka halaman proyek GitHub untuk melihat log pembaruan dan penjelasan proyek.",
     "msg_script_update_open": "Lihat Detail",
     "label_script_update_info": "Info Versi",
     "label_script_current_version": "Versi Saat Ini",
