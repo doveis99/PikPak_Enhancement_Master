@@ -287,6 +287,19 @@ Due to browser download limitations, files inside folders are usually flattened 
 
 ## 🚀 Changelog
 
+### V2.5.0
+* Added **Share Parsing Mode**, supporting share link parsing, clipboard detection, recursive insight scanning, file saving, media preview, and archive preview/extraction.
+* Added **direct download acceleration domain settings**, supporting prefix mode and query parameter mode for rewriting browser download and Aria2 / Motrix push links.
+* Added **mouse wheel volume control in the player**, with volume overlay feedback and muted icon state.
+* Optimized the **web fullscreen player**, fixing unsynchronized upward movement and jitter in the playlist, control bar, progress bar, and side buttons.
+* Optimized **narrow-screen and window scaling adaptation**, replacing the old scaling logic with adaptive button text hiding to keep text clear on small screens.
+* Optimized **play history grid sorting**, fixing the issue where the sort button icon and text did not update immediately after selecting from the dropdown.
+* Optimized **search keyword highlighting**, so long file names prioritize showing content around matched keywords.
+* Optimized **archive preview**, adding a sort menu and path dropdown, with support for extracting selected files only.
+* Optimized **settings save prompts**, so no prompt is shown when nothing changes, and normal settings no longer incorrectly prompt for a page refresh.
+* Fixed **Aria2 / Motrix pushing 0KB files**, automatically skipping invalid empty files.
+* Fixed several UI details, including abnormal line height, unified icons, English column width, and maximized path dropdown font size.
+
 ### V2.4.0
 * Added **version checking and update notifications**.
 * Added **video playback settings**, including reading playback progress when opening videos and choosing the default quality.
