@@ -6,7 +6,7 @@
 
 [![Pasang / Perbarui Terbaru](https://img.shields.io/badge/Pasang%20/%20Perbarui%20Terbaru-GitHub%20Latest-2EA44F?style=for-the-badge&logo=github&logoColor=white)](https://raw.githubusercontent.com/digbug82/PikPak_Enhancement_Master/main/PikPak_Enhancement_Master.user.js)
 
-[![Version](https://img.shields.io/badge/Version-2.4.0-0067C0?style=flat-square)](https://github.com/digbug82/PikPak_Enhancement_Master/blob/main/PikPak_Enhancement_Master.user.js)
+[![Version](https://img.shields.io/badge/Version-2.5.0-0067C0?style=flat-square)](https://github.com/digbug82/PikPak_Enhancement_Master/blob/main/PikPak_Enhancement_Master.user.js)
 [![License](https://img.shields.io/badge/License-CC--BY--NC--SA--4.0-red?style=flat-square)](https://spdx.org/licenses/CC-BY-NC-SA-4.0.html)
 [![Platform](https://img.shields.io/badge/Platform-PikPak%20Web-orange?style=flat-square)](https://mypikpak.com/drive/all)
 [![GitHub Stars](https://img.shields.io/github/stars/digbug82/PikPak_Enhancement_Master?style=flat-square&logo=github&label=Star)](https://github.com/digbug82/PikPak_Enhancement_Master/stargazers)
@@ -286,6 +286,19 @@ Karena keterbatasan protokol unduhan browser itu sendiri, file di dalam folder b
 ---
 
 ## 🚀 Changelog
+
+### V2.5.0
+* Menambahkan **Mode Parsing Berbagi**, mendukung parsing tautan berbagi, deteksi clipboard, pemindaian insight rekursif, penyimpanan file, pratinjau media, serta pratinjau/ekstraksi arsip.
+* Menambahkan **pengaturan domain akselerasi tautan unduhan langsung**, mendukung mode prefiks dan mode parameter kueri untuk menulis ulang tautan unduhan browser serta push Aria2 / Motrix.
+* Menambahkan **kontrol volume pemutar dengan roda mouse**, mendukung tampilan overlay volume dan status ikon bisu.
+* Mengoptimalkan **pemutar layar penuh web**, memperbaiki masalah pergeseran ke atas yang tidak sinkron dan getaran pada daftar putar, bilah kontrol, bilah progres, dan tombol samping.
+* Mengoptimalkan **adaptasi layar sempit dan penskalaan jendela**, merapikan logika penskalaan lama menjadi penyembunyian teks tombol secara adaptif agar teks tetap jelas di layar kecil.
+* Mengoptimalkan **penyortiran grid riwayat pemutaran**, memperbaiki masalah ikon dan teks tombol sortir yang tidak langsung diperbarui setelah memilih dari dropdown.
+* Mengoptimalkan **sorotan kata kunci pencarian**, sehingga nama file panjang akan memprioritaskan tampilan konten di sekitar kata kunci yang cocok.
+* Mengoptimalkan **pratinjau arsip**, menambahkan menu sortir dan dropdown jalur, serta mendukung ekstraksi sebagian file yang dipilih.
+* Mengoptimalkan **notifikasi penyimpanan pengaturan**, sehingga tidak ada notifikasi saat tidak ada perubahan, dan pengaturan biasa tidak lagi keliru meminta penyegaran halaman.
+* Memperbaiki masalah **push file 0KB ke Aria2 / Motrix**, dengan otomatis melewati file kosong yang tidak valid.
+* Memperbaiki beberapa detail UI, termasuk anomali tinggi baris, penyatuan ikon, lebar kolom bahasa Inggris, dan ukuran font dropdown jalur saat dimaksimalkan.
 
 ### V2.4.0
 * Menambahkan **pemeriksaan versi dan notifikasi pembaruan**.
