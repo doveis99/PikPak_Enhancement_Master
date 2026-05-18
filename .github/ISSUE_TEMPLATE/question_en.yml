@@ -1,0 +1,53 @@
+name: "❓ Question"
+description: "Ask a question or request support."
+title: "[Question] "
+labels: ["question"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for using PikPak Enhancement Master.
+
+        Before submitting, please search existing Issues and Discussions first.
+        Do not expose your account, Cookie, Authorization, Session, Token, or other private information.
+
+  - type: textarea
+    id: question-detail
+    attributes:
+      label: "Question / Support request"
+      description: "Please describe your question, what you have tried, and what result you expected."
+      placeholder: |
+        1. What do you want to know?
+        2. Which feature/page is related?
+        3. What have you already tried?
+        4. What result do you expect?
+    validations:
+      required: true
+
+  - type: input
+    id: browser-version
+    attributes:
+      label: "Browser and version"
+      description: "Please enter your browser name and version."
+      placeholder: "Example: Edge 124.0.2478.80 / Chrome 124.0.6367.119"
+    validations:
+      required: false
+
+  - type: input
+    id: script-version
+    attributes:
+      label: "Script version"
+      description: "Please enter the PikPak Enhancement Master version."
+      placeholder: "Example: 2.5.0"
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: "Screenshots or extra information"
+      description: "You can paste screenshots, drag images here, or add extra notes."
+      placeholder: "Paste images or add extra notes here"
+    validations:
+      required: false
