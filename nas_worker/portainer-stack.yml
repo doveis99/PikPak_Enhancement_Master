@@ -1,0 +1,44 @@
+services:
+  pikpak-nas-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pikpak-nas-worker:local
+    container_name: pikpak-nas-worker
+    restart: unless-stopped
+    ports:
+      - "${PIKPAK_NAS_PORT:-18082}:18082"
+    environment:
+      PIKPAK_NAS_TOKEN: "${PIKPAK_NAS_TOKEN:-change-this-long-random-token}"
+      PIKPAK_NAS_BIND: "0.0.0.0"
+      PIKPAK_NAS_PORT: "18082"
+      PIKPAK_NAS_DOWNLOAD_ROOT: "/downloads"
+      PIKPAK_NAS_STATE_DIR: "/state"
+      PIKPAK_NAS_TEMP_DIR: "${PIKPAK_NAS_TEMP_DIR:-/state/tmp}"
+      PIKPAK_NAS_CONCURRENCY: "${PIKPAK_NAS_CONCURRENCY:-2}"
+      PIKPAK_NAS_MAX_CONCURRENCY: "${PIKPAK_NAS_MAX_CONCURRENCY:-8}"
+      PIKPAK_NAS_JOB_CONCURRENCY: "${PIKPAK_NAS_JOB_CONCURRENCY:-16}"
+      PIKPAK_NAS_MAX_ITEMS: "${PIKPAK_NAS_MAX_ITEMS:-200}"
+      PIKPAK_NAS_OVERWRITE: "${PIKPAK_NAS_OVERWRITE:-0}"
+      PIKPAK_NAS_ALLOWED_HOSTS: "${PIKPAK_NAS_ALLOWED_HOSTS:-}"
+      PIKPAK_NAS_SEGMENTED: "${PIKPAK_NAS_SEGMENTED:-auto}"
+      PIKPAK_NAS_SEGMENTS: "${PIKPAK_NAS_SEGMENTS:-4}"
+      PIKPAK_NAS_SEGMENT_MIN_BYTES: "${PIKPAK_NAS_SEGMENT_MIN_BYTES:-67108864}"
+      PIKPAK_NAS_SEGMENT_MIN_SPLIT_BYTES: "${PIKPAK_NAS_SEGMENT_MIN_SPLIT_BYTES:-33554432}"
+    volumes:
+      - type: bind
+        source: "${PIKPAK_NAS_DOWNLOAD_PATH:-/share/Data/PikPak}"
+        target: /downloads
+      - type: bind
+        source: "${PIKPAK_NAS_STATE_PATH:-/share/Container/pikpak-nas-worker/state}"
+        target: /state
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import json,urllib.request; r=urllib.request.urlopen('http://127.0.0.1:18082/health', timeout=3); raise SystemExit(0 if json.load(r).get('ok') else 1)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
