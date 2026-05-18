@@ -1,0 +1,66 @@
+name: "🐛 Bug report"
+description: "Report a reproducible bug."
+title: "[Bug] "
+labels: ["bug"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting an issue with PikPak Enhancement Master.
+
+        Please search existing Issues before submitting to avoid duplicates.
+        Do not expose your account, Cookie, Authorization, Session, Token, or other private information in logs or screenshots.
+
+  - type: input
+    id: browser-version
+    attributes:
+      label: "Browser and version"
+      description: "Please enter your browser name and version."
+      placeholder: "Example: Edge 124.0.2478.80 / Chrome 124.0.6367.119"
+    validations:
+      required: true
+
+  - type: input
+    id: script-version
+    attributes:
+      label: "Script version"
+      description: "Please enter the PikPak Enhancement Master version."
+      placeholder: "Example: 2.5.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem-detail
+    attributes:
+      label: "Problem details"
+      description: "Please describe where it happened, which feature was used, how to reproduce it, the expected result, and the actual result."
+      placeholder: |
+        1. Page:
+        2. Feature:
+        3. Steps to reproduce:
+        4. Expected result:
+        5. Actual result:
+    validations:
+      required: true
+
+  - type: textarea
+    id: console-error
+    attributes:
+      label: "Console error"
+      description: |
+        Press F12 or Ctrl+Shift+I to open Developer Tools, then copy errors from Console.
+        If there is no error, write "None".
+      render: shell
+      placeholder: "Paste console errors here"
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: "Screenshots or screen recording"
+      description: "You can paste screenshots, drag images here, or provide a screen recording link."
+      placeholder: "Paste images or add extra notes here"
+    validations:
+      required: false

@@ -6,7 +6,7 @@
 
 [![Install / Update Latest](https://img.shields.io/badge/Install%20/%20Update%20Latest-GitHub%20Latest-2EA44F?style=for-the-badge&logo=github&logoColor=white)](https://raw.githubusercontent.com/digbug82/PikPak_Enhancement_Master/main/PikPak_Enhancement_Master.user.js)
 
-[![Version](https://img.shields.io/badge/Version-2.4.0-0067C0?style=flat-square)](https://github.com/digbug82/PikPak_Enhancement_Master/blob/main/PikPak_Enhancement_Master.user.js)
+[![Version](https://img.shields.io/badge/Version-2.5.0-0067C0?style=flat-square)](https://github.com/digbug82/PikPak_Enhancement_Master/blob/main/PikPak_Enhancement_Master.user.js)
 [![License](https://img.shields.io/badge/License-CC--BY--NC--SA--4.0-red?style=flat-square)](https://spdx.org/licenses/CC-BY-NC-SA-4.0.html)
 [![Platform](https://img.shields.io/badge/Platform-PikPak%20Web-orange?style=flat-square)](https://mypikpak.com/drive/all)
 [![GitHub Stars](https://img.shields.io/github/stars/digbug82/PikPak_Enhancement_Master?style=flat-square&logo=github&label=Star)](https://github.com/digbug82/PikPak_Enhancement_Master/stargazers)
@@ -286,6 +286,19 @@ Due to browser download limitations, files inside folders are usually flattened 
 ---
 
 ## 🚀 Changelog
+
+### V2.5.0
+* Added **Share Parsing Mode**, supporting share link parsing, clipboard detection, recursive insight scanning, file saving, media preview, and archive preview/extraction.
+* Added **direct download acceleration domain settings**, supporting prefix mode and query parameter mode for rewriting browser download and Aria2 / Motrix push links.
+* Added **mouse wheel volume control in the player**, with volume overlay feedback and muted icon state.
+* Optimized the **web fullscreen player**, fixing unsynchronized upward movement and jitter in the playlist, control bar, progress bar, and side buttons.
+* Optimized **narrow-screen and window scaling adaptation**, replacing the old scaling logic with adaptive button text hiding to keep text clear on small screens.
+* Optimized **play history grid sorting**, fixing the issue where the sort button icon and text did not update immediately after selecting from the dropdown.
+* Optimized **search keyword highlighting**, so long file names prioritize showing content around matched keywords.
+* Optimized **archive preview**, adding a sort menu and path dropdown, with support for extracting selected files only.
+* Optimized **settings save prompts**, so no prompt is shown when nothing changes, and normal settings no longer incorrectly prompt for a page refresh.
+* Fixed **Aria2 / Motrix pushing 0KB files**, automatically skipping invalid empty files.
+* Fixed several UI details, including abnormal line height, unified icons, English column width, and maximized path dropdown font size.
 
 ### V2.4.0
 * Added **version checking and update notifications**.
