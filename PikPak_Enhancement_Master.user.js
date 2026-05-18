@@ -29954,7 +29954,7 @@ const getNasDownloadConfig = () => {
     const url = normalizeNasWorkerUrl(gmGet('pk_nas_worker_url', ''));
     const token = String(gmGet('pk_nas_worker_token', '') || '').trim();
     return {
-        enabled: isTruthySetting(gmGet('pk_nas_enabled', false)) || (!!url && !!token),
+        enabled: isTruthySetting(gmGet('pk_nas_enabled', false)),
         url,
         token,
         batchSize: clampNasBatchSize(gmGet('pk_nas_batch_size', '25')),
