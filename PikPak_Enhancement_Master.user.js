@@ -44,6 +44,7 @@
 // @connect            web-vod-xdrive.mypikpak.com
 // @connect            whatslink.info
 // @connect            localhost
+// @connect            *
 // @run-at             document-start
 // @require            https://cdn.jsdelivr.net/npm/hls.js@1.5.8/dist/hls.min.js
 // @require            https://cdn.jsdelivr.net/npm/localforage@1.10.0/dist/localforage.min.js
@@ -323,6 +324,10 @@ dupGridBodyGapY: { normal: 16, max: 20 },
 SYSTEM_FOLDER_NAME: 'My Pack',
 browserDownloadConfirmFileCount: 10,
 browserDownloadConfirmTotalBytes: 10 * 1024 * 1024 * 1024,
+downloadAccelEnable: false,
+downloadAccelDomain: '',
+downloadAccelMode: 'prefix',
+downloadAccelQueryParam: 'url',
 uploadPartSizeOfficial: 1 * 1024 * 1024,
 uploadPartMaxCount: 9999,
 uploadPartConcurrencyOfficial: 5,
@@ -530,6 +535,48 @@ const CSS = `
 .pk-btn-danger:hover, #pk-empty-trash:hover { background: #d93025 !important; color: #fff !important; filter: brightness(1.15); opacity: 1 !important; }
 .pk-sidebar #pk-settings:hover { background: var(--pk-hl); color: var(--pk-fg); }
 .pk-sidebar #pk-settings svg { width: 26px !important; height: 26px !important; }
+.pk-tree-pane { width: 288px; background: var(--pk-bg); border-right: 1px solid var(--pk-bd); display: none; flex-direction: column; flex-shrink: 0; min-width: 220px; max-width: 340px; overflow: hidden; box-sizing: border-box; }
+.pk-maximized .pk-tree-pane { display: flex; }
+.pk-tree-collapsed .pk-tree-pane { display: none !important; }
+.pk-tree-rail { display: none; width: 38px; flex-shrink: 0; align-items: center; justify-content: center; border: 0; border-right: 1px solid var(--pk-bd); padding: 0; background: var(--pk-bg); color: var(--pk-icon-c); cursor: pointer; }
+.pk-maximized.pk-tree-collapsed .pk-tree-rail { display: flex; }
+.pk-tree-rail:hover { background: var(--pk-hl); color: var(--pk-pri); }
+.pk-tree-rail svg { width: 22px !important; height: 22px !important; }
+.pk-tree-head { height: 52px; padding: 0 10px 0 14px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid var(--pk-bd); box-sizing: border-box; flex-shrink: 0; }
+.pk-tree-title { min-width: 0; flex: 1; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 800; color: var(--pk-fg); }
+.pk-tree-title svg { width: 18px !important; height: 18px !important; flex-shrink: 0; }
+.pk-tree-title span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pk-tree-tool { width: 30px; height: 30px; border: 0; border-radius: 6px; background: transparent; color: var(--pk-icon-c); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+.pk-tree-tool:hover { background: var(--pk-hl); color: var(--pk-pri); }
+.pk-tree-tool svg { width: 16px !important; height: 16px !important; }
+.pk-tree-sort-wrap { position: relative; display: inline-flex; flex-shrink: 0; }
+.pk-tree-sort-wrap.open .pk-tree-tool { background: var(--pk-hl); color: var(--pk-pri); }
+.pk-tree-sort-menu { position: absolute; top: calc(100% + 8px); right: 0; min-width: 158px; background: var(--pk-bg); border: 1px solid var(--pk-bd); border-radius: 10px; box-shadow: 0 12px 36px rgba(0,0,0,0.18); padding: 5px; display: none; z-index: 10030; }
+.pk-tree-sort-wrap.open .pk-tree-sort-menu { display: block; }
+.pk-tree-sort-opt { border-radius: 8px; padding: 8px 10px; display: flex; align-items: center; gap: 9px; color: var(--pk-fg); cursor: pointer; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.pk-tree-sort-opt:hover, .pk-tree-sort-opt.active { background: var(--pk-hl); color: var(--pk-pri); }
+.pk-tree-sort-opt svg { width: 16px !important; height: 16px !important; flex-shrink: 0; }
+.pk-tree-list { flex: 1; overflow: auto; padding: 8px 8px 12px; box-sizing: border-box; }
+.pk-tree-row { height: 32px; display: flex; align-items: center; gap: 4px; border-radius: 6px; color: var(--pk-fg); cursor: pointer; box-sizing: border-box; user-select: none; position: relative; }
+.pk-tree-row:hover { background: var(--pk-hl); }
+.pk-tree-row.act { background: var(--pk-sel-bg); color: var(--pk-pri); font-weight: 700; }
+.pk-tree-row.pk-tree-loading { opacity: 0.72; }
+.pk-tree-row.pk-tree-error { color: #d93025; }
+.pk-tree-twist { width: 22px; height: 26px; border: 0; background: transparent; color: inherit; opacity: 0.65; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; border-radius: 4px; padding: 0; }
+.pk-tree-twist:hover { background: rgba(0,0,0,0.06); opacity: 1; }
+.pk-dark .pk-tree-twist:hover { background: rgba(255,255,255,0.08); }
+.pk-tree-twist svg { width: 14px !important; height: 14px !important; transition: transform 0.12s ease; }
+.pk-tree-row.exp .pk-tree-twist svg { transform: rotate(90deg); }
+.pk-tree-spacer { width: 22px; height: 26px; flex-shrink: 0; }
+.pk-tree-icon { width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.pk-tree-icon svg, .pk-tree-icon img { width: 18px !important; height: 18px !important; object-fit: contain; display: block; }
+.pk-tree-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; line-height: 1.2; padding-right: 4px; }
+.pk-tree-empty { padding: 16px 10px; font-size: 12px; color: var(--pk-fg); opacity: 0.58; line-height: 1.45; text-align: center; }
+.pk-maximized .pk-tree-head { height: 60px; padding-left: 16px; }
+.pk-maximized .pk-tree-title { font-size: 15px; }
+.pk-maximized .pk-tree-row { height: 34px; }
+.pk-maximized .pk-tree-name { font-size: 14px; }
+@media (max-width: 1280px) { .pk-maximized .pk-tree-pane { width: 248px; } }
 .pk-main-col { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; min-width: 0; }
 .pk-hd { height: 48px; border-bottom: 1px solid var(--pk-bd); display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: var(--pk-bg); }
 .pk-tt { font-weight: 700; font-size: 20px; display: flex; align-items: center; gap: 10px; }
@@ -787,6 +834,10 @@ const CSS = `
 .pk-tag-default { cursor: default !important; color: #999 !important; border: 1px solid #ccc !important; font-weight: normal !important; }
 .pk-tag-default:hover { color: #999 !important; }
 .pk-name span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 0 1 auto; line-height: 1.5; padding: 2px 0; margin-top: -2px; }
+.pk-name .pk-pc-down-mark, .pk-tree-row .pk-pc-down-mark { display:inline-flex !important; align-items:center; justify-content:center; flex:0 0 auto; width:16px; min-width:16px; height:16px; margin:0 0 0 6px !important; padding:0 !important; overflow:visible !important; white-space:normal !important; line-height:1 !important; color:#52c41a; opacity:.95; border:0 !important; vertical-align:middle; }
+.pk-name .pk-pc-down-mark svg, .pk-tree-row .pk-pc-down-mark svg { width:14px !important; height:14px !important; margin:0 !important; stroke-width:2.5; flex-shrink:0; }
+.pk-tree-row .pk-pc-down-mark { width:15px; min-width:15px; height:15px; margin-left:4px !important; }
+.pk-grid-view .pk-name .pk-pc-down-mark { margin-left:6px !important; }
 .pk-group-hd { display: flex; background: var(--pk-gh); color: var(--pk-gh-fg); font-weight: bold; align-items: center; padding: 0 16px; border-top: 4px solid var(--pk-bg) !important; border-bottom: 4px solid var(--pk-bg) !important; background-clip: padding-box; height: 40px !important; box-sizing: border-box; margin-top: 0 !important; }
 .pk-group-hd .pk-tag { margin-left: auto; background: #666; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; border: 1px solid #555; }
 .pk-group-hd .pk-cnt { margin-left: 10px; color: var(--pk-fg); font-size: 12px; opacity: 0.9; }
@@ -1828,6 +1879,8 @@ btn_newfolder: "新建文件夹",
 tip_newfolder: "新建文件夹 [F8]",
 btn_del: "删除",
 tip_del: "删除 [Delete]",
+btn_del_downloaded: "删除已下载",
+tip_del_downloaded: "删除当前列表中带下载标记的文件/文件夹",
 btn_deselect: "取消选择",
 tip_deselect: "取消选择 [Esc]",
 btn_invert: "反选",
@@ -2242,6 +2295,26 @@ label_comic_mode: "媒体模式",
 desc_comic_mode: "纯图片或纯视频文件夹默认 A-Z 排序",
 label_aria2_url: "Aria2 地址",
 label_aria2_token: "Aria2 密钥",
+label_nas_download: "NAS Download",
+label_nas_worker_url: "NAS Worker URL",
+label_nas_worker_token: "NAS Worker Token (required)",
+label_nas_batch_size: "NAS Job Batch Size",
+label_nas_concurrency: "NAS Download Concurrency",
+label_nas_segments: "NAS Segment Connections",
+desc_nas_batch_size: "This is the number of files submitted in one NAS job.",
+desc_nas_concurrency: "Maximum simultaneous file downloads on the NAS worker. The userscript applies this value before submitting NAS jobs.",
+desc_nas_segments: "Concurrent Range connections per file. A finished connection splits the largest remaining range and continues.",
+label_nas_worker_concurrency: "Concurrency",
+ph_nas_worker_token: "Required: same value as PIKPAK_NAS_TOKEN",
+desc_nas_download: "When enabled, the download button sends files to a dedicated NAS worker instead of launching browser downloads. Token is required.",
+label_download_accel: "Download Acceleration",
+label_download_accel_domain: "Acceleration Domain",
+label_download_accel_mode: "Rewrite Mode",
+label_download_accel_query_param: "Query Param",
+desc_download_accel: "Rewrite direct download links before browser, Aria2, or NAS download. Leave disabled unless your acceleration endpoint is ready.",
+opt_download_accel_prefix: "Prefix",
+opt_download_accel_query: "Query",
+ph_download_accel_domain: "https://accelerator.example/download",
 label_privacy_mode: "隐私图",
 label_blur_cover: "模糊媒体封面缩略图",
 label_hide_button_text: "隐藏按钮文字",
@@ -2393,6 +2466,7 @@ title_share_result: "分享成功",
 msg_no_files: "选中的项目为空。",
 msg_scan_filter_empty: "筛选条件已排除全部文件。",
 warn_del: "确定要删除选中的 {n} 项吗？",
+warn_del_downloaded: "确定要删除当前列表中带下载标记的 {n} 项吗？\n\n注意：被标记的文件夹可能包含未下载的项目，请先确认文件夹内容。",
 msg_clear_sel_confirm: "已选中 {n} 个重复文件，确认要取消当前的勾选吗？",
 str_bl_stat: "匹配: {n} 项 | 已选中: {m} 项",
 str_hits: "命中",
@@ -2416,6 +2490,8 @@ msg_add_success: "已追加 {n} 行数据。",
 msg_del_done: "已删除选中行。",
 msg_del_select: "请先点击选中要删除的行！",
 msg_del_items_done: "已删除 {n} 个项目。",
+msg_del_downloaded_none: "当前列表没有带下载标记的文件或文件夹。",
+msg_del_downloaded_done: "已删除 {n} 个带下载标记的项目。",
 msg_copy_success: "复制成功",
 str_redirecting: "正在跳转 Google Lens...",
 msg_manual_paste: "图床上传超时。已复制截图，请在新窗口按 {cmd}",
@@ -2487,7 +2563,18 @@ msg_task_deleted: "任务已删除",
 msg_scan_done: "扫描完成！\n共发现 {n} 个文件，遍历了 {f} 个文件夹。",
 msg_down_progress: "正在调用浏览器下载...",
 msg_down_confirm_total: "✅ 扫描完毕，共找到 {n} 个文件，总大小约 {s}。\n\n⚠️ 警告：当前任务规模较大，浏览器批量下载可能导致页面卡顿或被浏览器拦截。\n建议当文件数超过 {fc} 个或总大小超过 {fs} 时，优先使用 Aria2。\n\n是否仍然使用浏览器下载？",
+msg_nas_not_configured: "NAS Download requires both Worker URL and Worker Token.",
+msg_nas_submitting: "Sending download job to NAS...",
+msg_nas_progress: "NAS download",
+msg_nas_progress_resumed: "NAS download (resumed)",
+msg_nas_sent: "Sent {n} files to NAS worker.",
+msg_nas_failed: "NAS worker failed or only partially completed the job.",
+msg_nas_zero_byte_done: "NAS worker created {n} empty files.",
+msg_nas_cancel: "Cancel NAS download",
+msg_nas_canceling: "Canceling NAS download...",
+msg_nas_canceled: "NAS download canceled.",
 msg_aria2_sending_batch: "🚀 正在分批发送任务至 Aria2...",
+str_aria2_zero_byte_skipped: "0KB 文件已跳过",
 msg_aria2_check_fail: "Aria2 连接失败！\n请检查 URL 和 Token。",
 msg_aria2_sent: "已将 {n} 个文件发送到 Aria2。",
 msg_aria2_test_fail: "Aria2 连接失败。\n仍然保存设置吗？",
@@ -2581,6 +2668,44 @@ err_limit_too_low: "修改失败：新次数 ({n}) 必须大于当前已保存�
 err_vault_max: "密码金库最多仅支持存储 50 个常用密码",
 err_pwd_len: "单个密码长度不能超过 127 个字符",
 },
+ko: {
+btn_del_downloaded: "다운로드 항목 삭제",
+tip_del_downloaded: "현재 목록에서 PC 다운로드 표시가 있는 파일/폴더 삭제",
+warn_del_downloaded: "현재 목록에서 다운로드 표시가 있는 {n}개 항목을 삭제할까요?\n\n주의: 표시된 폴더 안에 아직 다운로드하지 않은 항목이 섞여 있을 수 있으니 먼저 폴더 내용을 확인하세요.",
+msg_del_downloaded_none: "현재 목록에 다운로드 표시가 있는 파일이나 폴더가 없습니다.",
+msg_del_downloaded_done: "다운로드 표시가 있는 {n}개 항목을 삭제했습니다.",
+label_nas_download: "NAS 다운로드",
+label_nas_worker_url: "NAS 워커 URL",
+label_nas_worker_token: "NAS 워커 토큰 (필수)",
+label_nas_batch_size: "NAS 작업 배치 크기",
+label_nas_concurrency: "NAS 동시 다운로드",
+label_nas_segments: "NAS 분할 연결 수",
+desc_nas_batch_size: "한 번의 NAS 작업으로 묶어 등록하는 파일 수입니다.",
+desc_nas_concurrency: "NAS 워커에서 동시에 내려받을 파일 수입니다. NAS 작업을 등록하기 전에 이 값이 워커에 적용됩니다.",
+desc_nas_segments: "파일별 동시 Range 연결 수입니다. 먼저 끝난 연결은 가장 큰 남은 구간을 나눠 이어받습니다.",
+label_nas_worker_concurrency: "동시 다운로드",
+ph_nas_worker_token: "필수: PIKPAK_NAS_TOKEN과 같은 값",
+desc_nas_download: "활성화하면 브라우저 다운로드 대신 NAS 워커로 파일 다운로드를 넘깁니다. 토큰은 필수입니다.",
+label_download_accel: "다운로드 가속",
+label_download_accel_domain: "가속 도메인",
+label_download_accel_mode: "재작성 방식",
+label_download_accel_query_param: "쿼리 파라미터",
+desc_download_accel: "브라우저, Aria2, NAS 다운로드에 넘기기 전에 직링크를 가속 엔드포인트 형식으로 바꿉니다. 가속 서버가 준비된 경우에만 켜세요.",
+opt_download_accel_prefix: "접두사",
+opt_download_accel_query: "쿼리",
+ph_download_accel_domain: "https://accelerator.example/download",
+msg_nas_not_configured: "NAS 다운로드에는 워커 URL과 워커 토큰이 모두 필요합니다.",
+msg_nas_submitting: "NAS로 다운로드 작업 전송 중...",
+msg_nas_progress: "NAS 다운로드",
+msg_nas_progress_resumed: "NAS 다운로드 (재개됨)",
+msg_nas_sent: "{n}개 파일을 NAS 워커로 보냈습니다.",
+msg_nas_failed: "NAS 워커 작업이 실패했거나 일부만 완료되었습니다.",
+msg_nas_zero_byte_done: "NAS 워커가 0KB 파일 {n}개를 생성했습니다.",
+msg_nas_cancel: "NAS 다운로드 취소",
+msg_nas_canceling: "NAS 다운로드 취소 중...",
+msg_nas_canceled: "NAS 다운로드를 취소했습니다.",
+str_aria2_zero_byte_skipped: "0KB 파일은 건너뛰었습니다",
+},
 };
 
 function getStrings() {
@@ -2613,6 +2738,7 @@ if (typeof globalCache !== 'undefined') globalCache.clear();
 if (typeof globalLineageMap !== 'undefined') globalLineageMap.clear();
 if (typeof globalParentIndex !== 'undefined') globalParentIndex.clear();
 if (typeof globalDirtyFolders !== 'undefined') globalDirtyFolders.clear();
+if (typeof resetPcDownloadIndex === 'function') resetPcDownloadIndex();
 if (typeof scannedFolderIds !== 'undefined') scannedFolderIds.clear();
 if (typeof backgroundQueue !== 'undefined') backgroundQueue.length = 0;
 if (typeof isBackgroundRunning !== 'undefined') isBackgroundRunning = false;
@@ -3145,6 +3271,139 @@ if (state.phase === 'done') {
 return totalFetched;
 }
 
+const PC_DOWNLOAD_INDEX_KEY = 'pk_pc_download_index_v1';
+const PC_DOWNLOAD_FILE_LIMIT = 50000;
+const PC_DOWNLOAD_PARENT_LIMIT = 20000;
+
+function normalizePcDownloadIndexId(id) {
+return String(id || '').trim();
+}
+
+function isPcDownloadRootLikeItem(item) {
+if (!item) return false;
+const id = normalizePcDownloadIndexId(item.id);
+const parentId = normalizePcDownloadIndexId(item.parent_id || item.parentId);
+if (!id || id === 'root') return true;
+return !!(item._isSystemRoot || (
+    item.kind === 'drive#folder' &&
+    item.name === CONF.SYSTEM_FOLDER_NAME &&
+    (!parentId || parentId === 'root')
+));
+}
+
+function isPcDownloadRootLikeParentId(parentId) {
+const id = normalizePcDownloadIndexId(parentId);
+if (!id || id === 'root') return true;
+
+if (typeof globalCache !== 'undefined') {
+    const rootEntries = [globalCache.get(''), globalCache.get('root')];
+    for (const entry of rootEntries) {
+        const list = Array.isArray(entry) ? entry : (entry && Array.isArray(entry.items) ? entry.items : []);
+        const rootObj = list.find(f => f && f.kind === 'drive#folder' && f.id === id && f.name === CONF.SYSTEM_FOLDER_NAME);
+        if (rootObj) return true;
+    }
+}
+
+if (typeof pkState !== 'undefined' && pkState && pkState.itemMap) {
+    const item = pkState.itemMap.get(id);
+    if (isPcDownloadRootLikeItem(item)) return true;
+}
+
+return false;
+}
+
+function resetPcDownloadIndex() {
+if (typeof globalPcDownloadFileIds !== 'undefined') globalPcDownloadFileIds.clear();
+if (typeof globalPcDownloadParentIds !== 'undefined') globalPcDownloadParentIds.clear();
+if (typeof globalPcDownloadIndexLoaded !== 'undefined') globalPcDownloadIndexLoaded = false;
+}
+
+function loadPcDownloadIndexFromStore() {
+if (globalPcDownloadIndexLoaded) return;
+globalPcDownloadIndexLoaded = true;
+try {
+    const raw = gmGet(PC_DOWNLOAD_INDEX_KEY, '');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    const files = Array.isArray(data.files) ? data.files : [];
+    const parents = Array.isArray(data.parents) ? data.parents : [];
+    files.forEach(id => {
+        const key = normalizePcDownloadIndexId(id);
+        if (key) globalPcDownloadFileIds.add(key);
+    });
+    parents.forEach(id => {
+        const key = normalizePcDownloadIndexId(id);
+        if (key && !isPcDownloadRootLikeParentId(key)) globalPcDownloadParentIds.add(key);
+    });
+} catch (e) {
+    console.warn('[PCDownloadIndex] load failed:', e);
+}
+}
+
+function trimPcDownloadSet(set, maxSize) {
+while (set.size > maxSize) {
+    const first = set.values().next().value;
+    set.delete(first);
+}
+}
+
+function savePcDownloadIndexToStore() {
+loadPcDownloadIndexFromStore();
+trimPcDownloadSet(globalPcDownloadFileIds, PC_DOWNLOAD_FILE_LIMIT);
+trimPcDownloadSet(globalPcDownloadParentIds, PC_DOWNLOAD_PARENT_LIMIT);
+gmSet(PC_DOWNLOAD_INDEX_KEY, JSON.stringify({
+    files: Array.from(globalPcDownloadFileIds),
+    parents: Array.from(globalPcDownloadParentIds),
+    updatedAt: Date.now()
+}));
+}
+
+function getPcDownloadParentId(item, parent = null) {
+const parentId = normalizePcDownloadIndexId(parent && parent.id);
+if (parentId && parentId !== 'root') return parentId;
+const candidates = [
+    item && item._pc_download_parent_id,
+    item && item.parent_id,
+    item && item.parentId,
+    item && item.file && item.file.parent_id,
+    item && item.file && item.file.parentId
+];
+for (const value of candidates) {
+    const id = normalizePcDownloadIndexId(value);
+    if (id && id !== 'root') return id;
+}
+return '';
+}
+
+function markPcDownloadedItems(items) {
+if (!Array.isArray(items) || !items.length) return false;
+loadPcDownloadIndexFromStore();
+let changed = false;
+for (const item of items) {
+    if (!item || !item.id || item.kind === 'drive#folder') continue;
+    const fileId = normalizePcDownloadIndexId(item.id);
+    if (!fileId) continue;
+    if (!globalPcDownloadFileIds.has(fileId)) {
+        globalPcDownloadFileIds.add(fileId);
+        changed = true;
+    }
+
+    const parentId = getPcDownloadParentId(item);
+    if (parentId && !isPcDownloadRootLikeParentId(parentId) && !globalPcDownloadParentIds.has(parentId)) {
+        globalPcDownloadParentIds.add(parentId);
+        changed = true;
+    }
+}
+
+if (changed) {
+    savePcDownloadIndexToStore();
+    if (typeof pkState !== 'undefined' && pkState) {
+        try { if (typeof renderVisible === 'function') renderVisible(); } catch (e) {}
+    }
+}
+return changed;
+}
+
 async function apiCancelTask(ids, deleteFiles = false) {
 let filesToDelete = [];
 if (deleteFiles && typeof pkState !== 'undefined' && pkState.itemMap) {
@@ -3416,6 +3675,182 @@ while ((queue.length > 0 || inFlight.size > 0 || pendingRetries > 0) && (!signal
 }
 }
 
+function isValidDownloadAccelHost(host) {
+host = String(host || '').trim().toLowerCase();
+if (!host) return false;
+if (host === 'localhost') return true;
+if (host.startsWith('xn--') || host.includes('.xn--')) return false;
+if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(host)) return host.split('.').every(n => Number(n) >= 0 && Number(n) <= 255);
+return /^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/.test(host);
+}
+
+function normalizeDownloadAccelBase(input) {
+const raw = String(input || '').trim();
+if (!raw) return '';
+try {
+    const candidate = /^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`;
+    const u = new URL(candidate);
+    if (!/^https?:$/i.test(u.protocol) || !u.hostname || u.origin === 'null') return '';
+    if (!isValidDownloadAccelHost(u.hostname)) return '';
+    const path = (u.pathname || '').replace(/\/+$/, '');
+    return `${u.origin}${path === '/' ? '' : path}${u.search}`;
+} catch (e) {
+    return '';
+}
+}
+
+function normalizeDownloadAccelMode(input) {
+return String(input || '').trim().toLowerCase() === 'query' ? 'query' : 'prefix';
+}
+
+function normalizeDownloadAccelQueryParam(input) {
+const param = String(input || '').trim();
+return /^[A-Za-z0-9_.~-]+$/.test(param) ? param : CONF.downloadAccelQueryParam;
+}
+
+function rewriteDownloadLinkForAccel(rawUrl) {
+try {
+    if (!rawUrl) return rawUrl;
+    if (!isTruthySetting(gmGet('pk_download_accel_enable', CONF.downloadAccelEnable))) return rawUrl;
+    const accelBase = normalizeDownloadAccelBase(gmGet('pk_download_accel_domain', CONF.downloadAccelDomain));
+    if (!accelBase) return rawUrl;
+    const raw = String(rawUrl).trim();
+    const src = new URL(raw);
+    if (!/^https?:$/i.test(src.protocol) || !src.hostname) return rawUrl;
+    const mode = normalizeDownloadAccelMode(gmGet('pk_download_accel_mode', CONF.downloadAccelMode));
+    if (mode === 'query') {
+        const sep = accelBase.includes('?') ? (/[?&]$/.test(accelBase) ? '' : '&') : '?';
+        return `${accelBase}${sep}${encodeURIComponent(normalizeDownloadAccelQueryParam(gmGet('pk_download_accel_query_param', CONF.downloadAccelQueryParam)))}=${encodeURIComponent(raw)}`;
+    }
+    return `${accelBase}/${raw}`;
+} catch (e) {
+    return rawUrl;
+}
+}
+
+function getDownloadUrlHost(rawUrl) {
+try {
+    const u = new URL(String(rawUrl || '').trim());
+    return u.hostname.toLowerCase();
+} catch (e) {
+    return '';
+}
+}
+
+function isFastPikPakHost(rawUrl) {
+const host = getDownloadUrlHost(rawUrl);
+return host === 'pikpak.io' || host.endsWith('.pikpak.io');
+}
+
+function isDlPikPakHost(rawUrl) {
+const host = getDownloadUrlHost(rawUrl);
+return host === 'dl-pikpak.com' || host.startsWith('dl-') || host.includes('.dl-');
+}
+
+function isLikelyStreamingDownloadUrl(rawUrl) {
+const url = String(rawUrl || '').toLowerCase();
+return !url || url.includes('.m3u8') || url.includes('ts_downloader') || url.includes('/hls/');
+}
+
+function isLikelyVideoDownloadItem(file) {
+const name = String((file && file.name) || '').toLowerCase();
+const mime = String((file && file.mime_type) || '').toLowerCase();
+if (mime.startsWith('video/')) return true;
+return /\.(mp4|mkv|avi|mov|wmv|flv|webm|ts|m2ts|mts)$/i.test(name);
+}
+
+function getDownloadMediaLabel(media) {
+return String((media && (media.media_name || media.resolution_name || media.video_stream_id)) || '').trim().toLowerCase();
+}
+
+function isOriginalDownloadMedia(media) {
+const label = getDownloadMediaLabel(media);
+return !!(media && (media.is_origin || label.includes('原画') || label.includes('original')));
+}
+
+function getPreferredTransferDownloadUrl(file) {
+const fallback = String((file && file.web_content_link) || '').trim();
+const candidates = [];
+if (fallback) {
+    candidates.push({ url: fallback, original: true, source: 'web_content_link', order: 0 });
+}
+if (file && Array.isArray(file.medias)) {
+    file.medias.forEach((media, index) => {
+        const url = media && media.link && media.link.url ? String(media.link.url).trim() : '';
+        if (!url || isLikelyStreamingDownloadUrl(url)) return;
+        candidates.push({
+            url,
+            original: isOriginalDownloadMedia(media),
+            source: 'medias',
+            order: index + 1
+        });
+    });
+}
+if (!candidates.length) return fallback;
+
+const scored = candidates.map(c => {
+    let score = 0;
+    if (isFastPikPakHost(c.url)) score += 100;
+    if (c.original) score += 40;
+    if (c.source === 'web_content_link') score += 10;
+    if (isDlPikPakHost(c.url)) score -= 20;
+    return { ...c, score };
+});
+scored.sort((a, b) => (b.score - a.score) || (a.order - b.order));
+return scored[0].url || fallback;
+}
+
+function shouldResolveDownloadDetailForTransfer(file) {
+const targetId = file && (file.file_id || file.id);
+if (!file || !targetId || !file.web_content_link || (Array.isArray(file.medias) && file.medias.length > 0)) return false;
+if (!isLikelyVideoDownloadItem(file)) return false;
+return isDlPikPakHost(file.web_content_link);
+}
+
+async function resolveDownloadDetailForTransfer(file) {
+if (!shouldResolveDownloadDetailForTransfer(file)) return file;
+try {
+    const targetId = file.file_id || file.id;
+    const detail = await apiGet(targetId);
+    if (detail && (detail.web_content_link || detail.medias)) return { ...file, ...detail };
+} catch (e) {
+    console.warn('[DownloadUrl] detail probe failed:', e);
+}
+return file;
+}
+
+function getTransferDownloadUrl(file) {
+return rewriteDownloadLinkForAccel(getPreferredTransferDownloadUrl(file));
+}
+
+function isZeroByteFile(file) {
+if (!file) return false;
+const rawSize = file.size ?? file.file_size ?? file.bytes;
+if (rawSize === 0 || rawSize === '0') return true;
+const n = Number(rawSize);
+return Number.isFinite(n) && n === 0;
+}
+
+function downloadEmptyFile(file) {
+try {
+    const blob = new Blob([''], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = (file && file.name) || 'empty';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+        if (a.parentNode) a.remove();
+        URL.revokeObjectURL(url);
+    }, 1000);
+    return true;
+} catch (e) {
+    return false;
+}
+}
+
 const version = (typeof GM_info !== 'undefined' && GM_info.script) ? GM_info.script.version : "1.0.0";
 
 console.log("%c PikPak Enhancement Master %c v" + version + " %c digbug82 %c CC-BY-NC-SA-4.0 ",
@@ -3490,6 +3925,85 @@ root.querySelectorAll('img[data-pk-preview-src]').forEach(img => {
     }, { once: true });
 });
 }
+
+function getPkExternalAddToken() {
+const hash = String(location.hash || '').replace(/^#/, '');
+const hashMatch = hash.match(/(?:^|[?&])pk-add=([^&]+)/);
+if (hashMatch) {
+    try { return decodeURIComponent(hashMatch[1]); }
+    catch (e) { return hashMatch[1]; }
+}
+
+try {
+    const url = new URL(location.href);
+    return url.searchParams.get('pk-add') || '';
+} catch (e) {
+    return '';
+}
+}
+
+let pkExternalAddBufferedPayload = null;
+
+function hasPkExternalAddPayload() {
+return !!pkExternalAddBufferedPayload || !!getPkExternalAddToken();
+}
+
+function clearPkExternalAddToken() {
+try {
+    const url = new URL(location.href);
+    if (url.searchParams.has('pk-add')) url.searchParams.delete('pk-add');
+
+    const hash = String(url.hash || '').replace(/^#/, '');
+    if (hash) {
+        const cleanedHash = hash
+            .replace(/(^|[?&])pk-add=[^&]*/g, (match, prefix) => prefix === '?' ? '?' : '')
+            .replace(/^[?&]+/, '')
+            .replace(/[?&]+$/, '')
+            .replace(/\?&/g, '?')
+            .replace(/&&+/g, '&');
+        url.hash = cleanedHash ? `#${cleanedHash}` : '';
+    }
+
+    history.replaceState(null, document.title, `${url.pathname}${url.search}${url.hash}`);
+} catch (e) {}
+}
+
+function decodePkExternalAddPayload(token) {
+let normalized = String(token || '').trim();
+if (!normalized) return null;
+
+try {
+    normalized = normalized.replace(/-/g, '+').replace(/_/g, '/');
+    while (normalized.length % 4) normalized += '=';
+    const binary = atob(normalized);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return JSON.parse(new TextDecoder().decode(bytes));
+} catch (e) {
+    console.warn('[PikPak External Add] Invalid payload:', e);
+    return null;
+}
+}
+
+function capturePkExternalAddPayload() {
+if (pkExternalAddBufferedPayload) return pkExternalAddBufferedPayload;
+const token = getPkExternalAddToken();
+if (!token) return null;
+clearPkExternalAddToken();
+pkExternalAddBufferedPayload = decodePkExternalAddPayload(token);
+return pkExternalAddBufferedPayload;
+}
+
+function readPkExternalAddPayload() {
+if (pkExternalAddBufferedPayload) {
+    const payload = pkExternalAddBufferedPayload;
+    pkExternalAddBufferedPayload = null;
+    return payload;
+}
+return capturePkExternalAddPayload();
+}
+
+capturePkExternalAddPayload();
 
 async function openManager(initialCache, preloadPromise) {
 const L = getStrings();
@@ -4350,7 +4864,8 @@ const FloatBarManager = (() => {
         });
     };
 
-    const create = (initialText) => {
+    const create = (initialText, options = {}) => {
+        const hasAction = typeof options.onAction === 'function';
         const id = 'pk_fb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
         const el = document.createElement('div');
         el.className = 'pk-float-bar-item';
@@ -4361,13 +4876,26 @@ const FloatBarManager = (() => {
             box-shadow: 0 10px 30px var(--pk-tip-sd); z-index: 2147483647 !important;
             border: 1px solid var(--pk-toast-bd); display: flex; align-items: center; gap: 12px;
             transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
-            opacity: 0; pointer-events: none; white-space: nowrap; backdrop-filter: blur(8px);
+            opacity: 0; pointer-events: ${hasAction ? 'auto' : 'none'}; white-space: nowrap; backdrop-filter: blur(8px);
+            max-width: calc(100vw - 32px);
         `;
 
-        el.innerHTML = `<div class="pk-spin-lg" style="width:16px; height:16px; border-width:2px;"></div><span class="pk-float-txt">${esc(initialText)}</span>`;
+        const actionHtml = hasAction
+            ? `<button type="button" class="pk-float-action" style="height:28px; padding:0 12px; border-radius:999px; border:1px solid rgba(217,48,37,.55); background:rgba(217,48,37,.12); color:#d93025; font-size:12px; font-weight:800; cursor:pointer; flex:0 0 auto;">${esc(options.actionText || L.btn_cancel || 'Cancel')}</button>`
+            : '';
+        el.innerHTML = `<div class="pk-spin-lg" style="width:16px; height:16px; border-width:2px; flex:0 0 auto;"></div><div class="pk-float-txt" style="min-width:0;">${esc(initialText)}</div>${actionHtml}`;
 
         const isDark = document.querySelector('.pk-ov')?.classList.contains('pk-dark');
         if (isDark) el.classList.add('pk-dark');
+
+        const actionBtn = el.querySelector('.pk-float-action');
+        if (actionBtn) {
+            actionBtn.onclick = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                options.onAction();
+            };
+        }
 
         const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
         if (fsEl) fsEl.appendChild(el);
@@ -4385,6 +4913,12 @@ const FloatBarManager = (() => {
             update: (text) => {
                 const span = el.querySelector('.pk-float-txt');
                 if (span) span.textContent = text;
+                reposition();
+            },
+            updateHtml: (html) => {
+                const span = el.querySelector('.pk-float-txt');
+                if (span) span.innerHTML = html;
+                reposition();
             },
             destroy: () => {
                 const idx = activeBars.findIndex(x => x.id === id);
@@ -4566,7 +5100,8 @@ if (isDark) el.classList.add('pk-dark');
 
 const themeIcon = isDark ? CONF.icons.sun : CONF.icons.moon;
 const initialGridShell = S.viewMode === 'grid' && !S.shareMode && !S.offlineMode && !S.uploadMode && !S.historyMode && !S.trashMode;
-const winClass = 'pk-win pk-lang-' + lang + (initialGridShell ? ' pk-grid-view' : '');
+const savedTreeCollapsed = !!gmGet('pk_tree_collapsed', false);
+const winClass = 'pk-win pk-lang-' + lang + (initialGridShell ? ' pk-grid-view' : '') + (savedTreeCollapsed ? ' pk-tree-collapsed' : '');
 const initialHeaderStyle = initialGridShell ? 'visibility:hidden;' : '';
 
 const ctxIcons = {
@@ -4627,6 +5162,26 @@ el.innerHTML = `
 
             <div class="pk-nav-btn" id="pk-settings" data-pk-tip="${L.tip_settings}" style="margin-top:0 !important;">${CONF.icons.settings}<span>${L.btn_settings}</span></div>
         </div>
+
+        <div class="pk-tree-pane" id="pk-tree-pane">
+            <div class="pk-tree-head">
+                <div class="pk-tree-title">
+                    ${CONF.typeIcons.folder.replace(/width="\d+"/, 'width="18"').replace(/height="\d+"/, 'height="18"')}
+                    <span>${L.opt_tree_view}</span>
+                </div>
+                <div class="pk-tree-sort-wrap" id="pk-tree-sort-wrap">
+                    <button type="button" class="pk-tree-tool" id="pk-tree-sort" data-pk-tip="${L.str_sorting || 'Sort'}">${CONF.crumbIcons.sortAZ}</button>
+                    <div class="pk-tree-sort-menu" id="pk-tree-sort-menu"></div>
+                </div>
+                <button type="button" class="pk-tree-tool" id="pk-tree-refresh" data-pk-tip="${L.tip_refresh}">${CONF.icons.refresh}</button>
+                <button type="button" class="pk-tree-tool" id="pk-tree-toggle" data-pk-tip="${L.btn_close}">${CONF.icons.close}</button>
+            </div>
+            <div class="pk-tree-list pk-scroll" id="pk-tree-list"></div>
+        </div>
+
+        <button type="button" class="pk-tree-rail" id="pk-tree-rail" data-pk-tip="${L.opt_tree_view}">
+            ${CONF.typeIcons.folder.replace(/width="\d+"/, 'width="22"').replace(/height="\d+"/, 'height="22"')}
+        </button>
 
         <div class="pk-main-col">
 
@@ -4804,6 +5359,7 @@ el.innerHTML = `
 
             <button class="pk-btn" id="pk-newfolder" data-pk-tip="${L.tip_newfolder}">${CONF.icons.newfolder} <span>${L.btn_newfolder}</span></button>
             <button class="pk-btn" id="pk-del" data-pk-tip="${L.tip_del}">${CONF.icons.del} <span>${L.btn_del}</span></button>
+            <button class="pk-btn" id="pk-del-downloaded" data-pk-tip="${L.tip_del_downloaded}" style="color:#d93025; display:none;">${CONF.icons.del} <span>${L.btn_del_downloaded}</span></button>
             <button class="pk-btn" id="pk-clear-history-all" style="display:none;" data-pk-tip="${L.tip_clear_all_history}">${CONF.icons.cleanAll} <span>${L.btn_clear_all_history}</span></button>
             <button class="pk-btn" id="pk-deselect" data-pk-tip="${L.tip_deselect}" style="display:none">${CONF.icons.deselect} <span>${L.btn_deselect}</span></button>
             <div class="pk-sep"></div>
@@ -5135,6 +5691,10 @@ let activeTarget = null;
 })();
 const UI = {
     win: el.querySelector('.pk-win'), vp: el.querySelector('#pk-vp'), in: el.querySelector('#pk-in'),
+    treePane: el.querySelector('#pk-tree-pane'), treeList: el.querySelector('#pk-tree-list'),
+    treeToggle: el.querySelector('#pk-tree-toggle'), treeRail: el.querySelector('#pk-tree-rail'),
+    treeRefresh: el.querySelector('#pk-tree-refresh'), treeSortWrap: el.querySelector('#pk-tree-sort-wrap'),
+    treeSort: el.querySelector('#pk-tree-sort'), treeSortMenu: el.querySelector('#pk-tree-sort-menu'),
     loader: el.querySelector('#pk-loader'), loadTxt: el.querySelector('#pk-load-txt'), stopBtn: el.querySelector('#pk-stop-load'),
     crumb: el.querySelector('#pk-crumb'), stat: el.querySelector('#pk-stat'),
     chkAll: el.querySelector('#pk-all'), scan: el.querySelector('#pk-scan-dup'),
@@ -5175,7 +5735,7 @@ const UI = {
     btnDupSort: el.querySelector('#pk-dup-sort-btn'),
     btnExit: el.querySelector('#pk-btn-exit'),
     btnCopy: el.querySelector('#pk-copy'), btnCut: el.querySelector('#pk-cut'),
-    btnDel: el.querySelector('#pk-del'), btnClearHistoryAll: el.querySelector('#pk-clear-history-all'), btnDeselect: el.querySelector('#pk-deselect'),
+    btnDel: el.querySelector('#pk-del'), btnDelDownloaded: el.querySelector('#pk-del-downloaded'), btnClearHistoryAll: el.querySelector('#pk-clear-history-all'), btnDeselect: el.querySelector('#pk-deselect'),
     btnRename: el.querySelector('#pk-rename'),
     btnBulkRename: el.querySelector('#pk-bulkrename'),
     btnPrune: el.querySelector('#pk-prune'),
@@ -7248,6 +7808,8 @@ if (btnMax) {
             CONF.rowHeight = 40;
         }
 
+        if (typeof syncTreePaneFromState === 'function') syncTreePaneFromState();
+
         if (typeof renderList === 'function') {
             renderList();
         } else if (typeof renderVisible === 'function') {
@@ -9104,7 +9666,6 @@ async function load(isHistoryNav = false, forceUpdate = false) {
             for (let k = 0; k < S.items.length; k++) {
                 S.itemMap.set(S.items[k].id, S.items[k]);
             }
-
             syncStars();
             refresh();
             updateStat();
@@ -9289,6 +9850,8 @@ async function load(isHistoryNav = false, forceUpdate = false) {
                             created_time: t.created_time,
                             modified_time: t.updated_time || ref.modified_time || '',
                             file_id: t.file_id || '',
+                            parent_id: ref.parent_id || '',
+                            reference_kind: ref.kind || '',
                             source_url: (t.params && t.params.url) ? t.params.url : '',
                             params: Object.assign({}, t.params || {}, ref.params || {}),
                             mime_type: ref.mime_type || '',
@@ -11859,7 +12422,87 @@ function renderList() {
     });
 }
 
-function renderVisible() {
+const getPcDownloadMarkerTip = () => `${L.btn_down || 'Download'}: PC`;
+const hasPcDownloadMark = (item) => {
+    if (!item || !item.id) return false;
+    loadPcDownloadIndexFromStore();
+    const id = String(item.id);
+    if (isPcDownloadRootLikeItem(item) || isPcDownloadRootLikeParentId(id)) return false;
+    if (globalPcDownloadFileIds.has(id)) return true;
+    return item.kind === 'drive#folder' && globalPcDownloadParentIds.has(id);
+};
+const getPcDownloadMarkHtml = (item, extraClass = '') => {
+    if (!hasPcDownloadMark(item)) return '';
+    const cls = extraClass ? ` pk-pc-down-mark ${extraClass}` : ' pk-pc-down-mark';
+    return `<span class="${cls.trim()}" data-pk-tip="${esc(getPcDownloadMarkerTip())}">${CONF.icons.download}</span>`;
+};
+
+function isPcDownloadedBatchDeleteView() {
+    const cur = (S.path && S.path[S.path.length - 1]) || {};
+    const curId = String(cur.id || '');
+    return !S.trashMode &&
+        !S.shareMode &&
+        !S.offlineMode &&
+        !S.uploadMode &&
+        !S.historyMode &&
+        !S.starredMode &&
+        !S.recentMode &&
+        !S.isFlattened &&
+        !S.dupMode &&
+        !(S.analyzeMode && curId === 'analyze_root') &&
+        curId !== 'virtual_search_root';
+}
+
+function isPcDownloadedBatchDeleteCandidate(item) {
+    if (!item || !item.id || item.isHeader) return false;
+    if (!hasPcDownloadMark(item)) return false;
+    if (!S.trashMode && isSystemItem(item)) return false;
+
+    if (gmGet('pk_skip_bl_on_del', true)) {
+        const lowerName = String(item.name || '').toLowerCase().trim();
+        const isFolder = item.kind === 'drive#folder';
+        const blSet = S.blSet || new Set();
+        const blFolderSet = S.blFolderSet || new Set();
+        if (isFolder ? blFolderSet.has(lowerName) : blSet.has(lowerName)) return false;
+    }
+
+    return true;
+}
+
+function getPcDownloadedDeleteCandidates() {
+    if (!isPcDownloadedBatchDeleteView()) return [];
+    const source = Array.isArray(S.display) ? S.display : S.items;
+    const seen = new Set();
+    const candidates = [];
+
+    for (const item of source || []) {
+        if (!isPcDownloadedBatchDeleteCandidate(item)) continue;
+        const id = normalizePcDownloadIndexId(item.id);
+        if (!id || seen.has(id)) continue;
+        seen.add(id);
+        candidates.push(item);
+    }
+
+    return candidates;
+}
+
+function removePcDownloadMarksForDeletedItems(items) {
+    if (!Array.isArray(items) || !items.length) return false;
+    loadPcDownloadIndexFromStore();
+    let changed = false;
+
+    for (const item of items) {
+        const id = normalizePcDownloadIndexId(item && item.id);
+        if (!id) continue;
+        if (globalPcDownloadFileIds.delete(id)) changed = true;
+        if (item && item.kind === 'drive#folder' && globalPcDownloadParentIds.delete(id)) changed = true;
+    }
+
+    if (changed) savePcDownloadIndexToStore();
+    return changed;
+}
+
+        function renderVisible() {
     const L = getStrings();
     const isGridMode = isGridView();
     const gridLayout = isGridMode ? getGridLayout() : null;
@@ -13141,6 +13784,7 @@ function renderVisible() {
                             <div class="pk-name">
                                 <div class="pk-name-main">
                                     <span class="pk-name-txt">${nameDisplay}</span>
+                                    ${getPcDownloadMarkHtml(d)}
                                     ${isProtected ? `<span class="pk-tag-default">${L.tag_default}</span>` : ''}
                                 </div>
                             </div>
@@ -13405,7 +14049,7 @@ function renderVisible() {
                 const thumbAttr = isRealThumb ? `data-pk-thumb="${d.thumbnail_link}"` : '';
                 const nameDisplay = (S.search && shouldShowHl) ? getSearchHlHTML(d.name, S.search, charCapacity) : esc(d.name);
 
-                html += `<div class="pk-name" ${thumbAttr} data-pk-tip="${nameTip}" style="${isProtected ? 'opacity:1;' : ''}">${getDynamicIcon(d)}<span class="pk-name-txt">${nameDisplay}</span>${isProtected ? `<span class="pk-tag-default">${L.tag_default}</span>` : ''}</div>`;
+                html += `<div class="pk-name" ${thumbAttr} data-pk-tip="${nameTip}" style="${isProtected ? 'opacity:1;' : ''}">${getDynamicIcon(d)}<span class="pk-name-txt">${nameDisplay}</span>${getPcDownloadMarkHtml(d)}${isProtected ? `<span class="pk-tag-default">${L.tag_default}</span>` : ''}</div>`;
 
                 if (showPathCol) {
                     let pathHtml = '';
@@ -13861,7 +14505,7 @@ function renderVisible() {
                     const t = checkType(d);
                     if (t.isTorrent) handleTorrentFile(d);
                     else if (t.isVideo || t.isImage) {
-                        if (t.isVideo) playVideo(d); else showImage(d);
+                        if (t.isVideo) playWithPotPlayer(d); else showImage(d);
                     } else if (d.file_id) {
                         S.setAllSelection(false);
                         S.setSelected(d.id, true);
@@ -13888,7 +14532,7 @@ function renderVisible() {
 
                     if (t.isTorrent) handleTorrentFile(d);
                     else if (t.isVideo || t.isImage) {
-                        if (t.isVideo) playVideo(d);
+                        if (t.isVideo) playWithPotPlayer(d);
                         else showImage(d);
                     } else {
                         S.setAllSelection(false);
@@ -13946,7 +14590,7 @@ function renderVisible() {
                     const t = checkType(d);
                     if (t.isTorrent) handleTorrentFile(d);
                     else if (t.isArchive) handleOpenArchive(d);
-                    else if (t.isVideo) playVideo(d);
+                    else if (t.isVideo) playWithPotPlayer(d);
                     else if (t.isImage) showImage(d);
                 }
             };
@@ -14152,6 +14796,8 @@ function renderVisible() {
                 } else {
                     const mime = (d.mime_type || "").toLowerCase();
                     const name = (d.name || "").toLowerCase();
+                    const dur = (d.params && d.params.duration) || 0;
+                    const videoExts = ['mp4','mkv','avi','mov','wmv','flv','webm','ts','m4v','3gp'];
 
                     if (name.endsWith('.torrent')) {
                         handleTorrentFile(d);
@@ -14161,8 +14807,8 @@ function renderVisible() {
                         name.endsWith('.zip') || name.endsWith('.rar') || name.endsWith('.7z') || name.endsWith('.tar') || name.endsWith('.gz')) {
                         handleOpenArchive(d);
                     }
-                    else if (mime.startsWith('video')) {
-                        playVideo(d);
+                    else if (mime.startsWith('video') || dur > 0 || videoExts.some(ext => name.endsWith('.' + ext))) {
+                        playWithPotPlayer(d);
                     }
                     else if (mime.startsWith('image')) {
                         showImage(d);
@@ -14172,6 +14818,8 @@ function renderVisible() {
 
             row.oncontextmenu = (e) => {
                 e.preventDefault();
+                S._treeContextActive = false;
+                S._treeContextItem = null;
 
                 if (!S.isSelected(d.id)) {
                     S.setAllSelection(false);
@@ -14331,6 +14979,7 @@ function renderVisible() {
                             upEls.open.style.display = (isVideo || isImg) ? 'flex' : 'none';
 
                             upEls.ext.style.order = '11';
+                            upEls.ext.innerHTML = getBuiltInPlayerMenuHtml();
                             upEls.ext.style.display = isVideo ? 'flex' : 'none';
 
                             upEls.loc.style.order = '12';
@@ -14431,6 +15080,7 @@ function renderVisible() {
                     }
                     if (els.ext) {
                         els.ext.style.order = '11';
+                        els.ext.innerHTML = getBuiltInPlayerMenuHtml();
                         const canExt = isSingle && firstItem?.file_id && firstItem.phase === 'PHASE_TYPE_COMPLETE' && isVid;
                         els.ext.style.display = canExt ? 'flex' : 'none';
                         if(canExt) g1++;
@@ -14517,15 +15167,16 @@ function renderVisible() {
                             sep2: UI.ctx.querySelector('#sep-trash-2')
                         };
 
-                        if(tr.cpName) tr.cpName.style.display = 'flex';
-                        if(tr.sep1) tr.sep1.style.display = 'block';
+                        if(tr.cpName) { tr.cpName.style.order = '10'; tr.cpName.style.display = 'flex'; }
+                        if(tr.sep1) { tr.sep1.style.order = '15'; tr.sep1.style.display = 'block'; }
 
-                        if(tr.restore) tr.restore.style.display = 'flex';
-                        if(tr.sep2) tr.sep2.style.display = 'block';
+                        if(tr.restore) { tr.restore.style.order = '20'; tr.restore.style.display = 'flex'; }
+                        if(tr.sep2) { tr.sep2.style.order = '25'; tr.sep2.style.display = 'block'; }
 
-                        if(tr.delF) tr.delF.style.display = 'flex';
+                        if(tr.delF) { tr.delF.style.order = '30'; tr.delF.style.display = 'flex'; }
 
                         if(tr.addBl) {
+                            tr.addBl.style.order = '31';
                             tr.addBl.style.display = 'flex';
                             setBlacklistContextItemState(tr.addBl);
                         }
@@ -14539,8 +15190,12 @@ function renderVisible() {
 
                         if (ctxSelectedCount === 1) {
                             [itms.open, itms.prop].forEach(el => { if(el) el.style.display = 'flex'; });
-                            const isVideo = (d.mime_type || '').startsWith('video/') || (d.params && d.params.duration > 0);
-                            if (itms.extPlay) itms.extPlay.style.display = isVideo ? 'flex' : 'none';
+                            const ctxName = (d.name || '').toLowerCase();
+                            const isVideo = (d.mime_type || '').startsWith('video/') || (d.params && d.params.duration > 0) || ['mp4','mkv','avi','mov','wmv','flv','webm','ts','m4v','3gp'].some(ext => ctxName.endsWith('.' + ext));
+                            if (itms.extPlay) {
+                                itms.extPlay.innerHTML = getBuiltInPlayerMenuHtml();
+                                itms.extPlay.style.display = isVideo ? 'flex' : 'none';
+                            }
                             hasGroup2 = true;
                         }
                         if (itms.star) {
@@ -15549,6 +16204,719 @@ if (UI.vp) {
     });
 }
 
+const TREE_SORT_KEY = 'pk_tree_sort_mode';
+const getTreeSortOptions = () => {
+    const nameLabel = L.opt_sort_name || L.col_name || 'Name';
+    const modifiedLabel = L.lbl_prop_mtime || L.col_date || 'Modified';
+    const createdLabel = L.lbl_prop_ctime || 'Created';
+    const newLabel = L.picker_sort_new || 'New';
+    const oldLabel = L.picker_sort_old || 'Old';
+    return [
+        { id: 'name_asc', label: `${nameLabel} A-Z`, icon: CONF.crumbIcons.sortAZ },
+        { id: 'name_desc', label: `${nameLabel} Z-A`, icon: CONF.crumbIcons.sortZA },
+        { id: 'mtime_desc', label: `${modifiedLabel} ${newLabel}`, icon: CONF.crumbIcons.sortNew },
+        { id: 'mtime_asc', label: `${modifiedLabel} ${oldLabel}`, icon: CONF.crumbIcons.sortOld },
+        { id: 'ctime_desc', label: `${createdLabel} ${newLabel}`, icon: CONF.crumbIcons.sortNew },
+        { id: 'ctime_asc', label: `${createdLabel} ${oldLabel}`, icon: CONF.crumbIcons.sortOld }
+    ];
+};
+const normalizeTreeSortMode = (mode) => getTreeSortOptions().some(opt => opt.id === mode) ? mode : 'name_asc';
+const getSavedTreeSortMode = () => normalizeTreeSortMode(gmGet(TREE_SORT_KEY, 'name_asc'));
+let pkTreeState = null;
+const getTreeState = () => {
+    if (!pkTreeState) {
+        pkTreeState = {
+            collapsed: !!gmGet('pk_tree_collapsed', false),
+            sortMode: getSavedTreeSortMode(),
+            expanded: new Set(['root']),
+            loading: new Set(),
+            loaded: new Set(),
+            children: new Map(),
+            errors: new Map(),
+            nodeMap: new Map([['root', { id: 'root', name: L.btn_nav_home, parentId: null }]]),
+            parentMap: new Map(),
+            pathMap: new Map([['root', [{ id: '', name: L.btn_nav_home }]]])
+        };
+    }
+    return pkTreeState;
+};
+
+const getTreeId = (id) => (!id || id === 'root') ? 'root' : String(id);
+const getTreeApiId = (id) => getTreeId(id) === 'root' ? '' : getTreeId(id);
+const cloneTreePath = (path) => (Array.isArray(path) ? path : []).map(p => ({ id: p.id || '', name: p.name || '' }));
+const getTreeCacheKeys = (id) => {
+    const tid = getTreeId(id);
+    return tid === 'root' ? ['root', ''] : [tid];
+};
+const normalizeTreeCacheItems = (raw) => {
+    if (!raw) return null;
+    if (Array.isArray(raw)) return raw;
+    if (raw && Array.isArray(raw.items)) return raw.items;
+    return null;
+};
+const getTreeCachedItems = (id) => {
+    const keys = getTreeCacheKeys(id);
+    for (const key of keys) {
+        if (typeof globalCache !== 'undefined' && globalCache.has(key)) {
+            const items = normalizeTreeCacheItems(globalCache.get(key));
+            if (items) return items;
+        }
+        if (S.cache && S.cache.has(key)) {
+            const items = normalizeTreeCacheItems(S.cache.get(key));
+            if (items) return items;
+        }
+    }
+    return null;
+};
+const sortTreeFolders = (folders) => {
+    const st = getTreeState();
+    const mode = normalizeTreeSortMode(st.sortMode);
+    const collator = new Intl.Collator(({ 'zh': 'zh-CN', 'tc': 'zh-TW', 'ja': 'ja', 'ko': 'ko' })[getLang()] || 'en', { numeric: true, sensitivity: 'base' });
+    const byName = (a, b) => collator.compare(a.name || '', b.name || '');
+    const toTime = (value) => {
+        const time = Date.parse(value || '');
+        return Number.isFinite(time) ? time : 0;
+    };
+    const byTime = (field, desc) => (a, b) => {
+        const av = toTime(a[field]);
+        const bv = toTime(b[field]);
+        if (!av && bv) return 1;
+        if (av && !bv) return -1;
+        if (av !== bv) return desc ? (bv - av) : (av - bv);
+        return byName(a, b);
+    };
+
+    return folders.sort((a, b) => {
+        if (mode === 'name_desc') return byName(b, a);
+        if (mode === 'mtime_desc') return byTime('modified_time', true)(a, b);
+        if (mode === 'mtime_asc') return byTime('modified_time', false)(a, b);
+        if (mode === 'ctime_desc') return byTime('created_time', true)(a, b);
+        if (mode === 'ctime_asc') return byTime('created_time', false)(a, b);
+        return byName(a, b);
+    });
+};
+const resortTreeChildren = () => {
+    const st = getTreeState();
+    st.children.forEach((children, key) => {
+        st.children.set(key, sortTreeFolders([...(children || [])]));
+    });
+};
+const renderTreeSortMenu = () => {
+    if (!UI.treeSortMenu) return;
+    const st = getTreeState();
+    UI.treeSortMenu.innerHTML = getTreeSortOptions().map(opt => `
+        <div class="pk-tree-sort-opt${st.sortMode === opt.id ? ' active' : ''}" data-tree-sort="${esc(opt.id)}">
+            ${opt.icon}
+            <span>${esc(opt.label)}</span>
+        </div>
+    `).join('');
+};
+const updateTreeSortButton = () => {
+    if (!UI.treeSort) return;
+    const st = getTreeState();
+    const opt = getTreeSortOptions().find(item => item.id === st.sortMode) || getTreeSortOptions()[0];
+    UI.treeSort.innerHTML = opt.icon;
+    UI.treeSort.setAttribute('data-pk-tip', opt.label);
+};
+const setTreeChildren = (parentId, items, parentName = '') => {
+    const st = getTreeState();
+    const tid = getTreeId(parentId);
+    const parentPath = cloneTreePath(st.pathMap.get(tid) || (tid === 'root' ? [{ id: '', name: L.btn_nav_home }] : []));
+    const folders = sortTreeFolders((Array.isArray(items) ? items : [])
+        .filter(item => item && item.kind === 'drive#folder' && item.id)
+        .filter(item => {
+            const actualParent = getTreeId(item.parent_id || item.parentId || parentId);
+            return tid === 'root'
+                ? (actualParent === 'root' || !item.parent_id && !item.parentId)
+                : (!item.parent_id && !item.parentId) || actualParent === tid;
+        })
+        .map(item => ({
+            id: String(item.id),
+            kind: 'drive#folder',
+            name: item.name || '',
+            parentId: tid,
+            api_parent_id: item.parent_id || item.parentId || '',
+            icon_link: item.icon_link || '',
+            modified_time: item.modified_time || '',
+            created_time: item.created_time || item.create_time || ''
+        })));
+
+    if (tid === 'root') {
+        st.nodeMap.set('root', { id: 'root', kind: 'drive#folder', name: L.btn_nav_home, parentId: null });
+        st.pathMap.set('root', [{ id: '', name: L.btn_nav_home }]);
+    } else if (!st.nodeMap.has(tid)) {
+        st.nodeMap.set(tid, { id: tid, kind: 'drive#folder', name: parentName || tid, parentId: st.parentMap.get(tid) || null });
+    } else if (parentName) {
+        st.nodeMap.get(tid).name = parentName;
+    }
+    if (tid !== 'root' && parentName && parentPath.length > 0) {
+        const last = parentPath[parentPath.length - 1];
+        if (last && last.id === tid) last.name = parentName;
+        st.pathMap.set(tid, parentPath);
+    }
+
+    folders.forEach(folder => {
+        st.nodeMap.set(folder.id, folder);
+        st.parentMap.set(folder.id, tid);
+        const childPath = parentPath.length > 0
+            ? [...parentPath, { id: folder.id, name: folder.name || folder.id }]
+            : [{ id: '', name: L.btn_nav_home }, { id: folder.id, name: folder.name || folder.id }];
+        st.pathMap.set(folder.id, childPath);
+    });
+    st.children.set(tid, folders);
+    st.loaded.add(tid);
+    st.errors.delete(tid);
+};
+const hydrateTreeChildrenFromCache = (parentId, parentName = '') => {
+    const cached = getTreeCachedItems(parentId);
+    if (!cached) return false;
+    setTreeChildren(parentId, cached, parentName);
+    return true;
+};
+const getTreeCurrentId = () => {
+    const cur = S.path && S.path.length ? S.path[S.path.length - 1] : null;
+    return getTreeId(cur && cur.id);
+};
+const isTreeStandardMode = () => {
+    if (!S.path || !S.path.length) return false;
+    if (S.trashMode || S.shareMode || S.offlineMode || S.uploadMode || S.historyMode || S.starredMode || S.recentMode) return false;
+    if (S.isFlattened || S.dupMode || S.analyzeMode) return false;
+    return !S.path.some(p => {
+        const id = p && p.id;
+        return id === 'virtual_search_root' || id === 'analyze_root' || id === 'recent_root' || id === 'history_root' || id === 'offline_root' || id === 'upload_root';
+    });
+};
+const registerTreePath = () => {
+    const st = getTreeState();
+    if (!Array.isArray(S.path) || !S.path.length) return;
+    let prev = null;
+    S.path.forEach((node, idx) => {
+        const tid = getTreeId(node && node.id);
+        const name = (idx === 0 && tid === 'root') ? L.btn_nav_home : ((node && node.name) || tid);
+        const treeNode = { id: tid, kind: 'drive#folder', name, parentId: prev };
+        st.nodeMap.set(tid, treeNode);
+        st.pathMap.set(tid, cloneTreePath(S.path.slice(0, idx + 1)));
+        if (prev) {
+            st.parentMap.set(tid, prev);
+            const siblings = st.children.get(prev);
+            if (Array.isArray(siblings) && !siblings.some(child => child && getTreeId(child.id) === tid)) {
+                st.children.set(prev, sortTreeFolders([...siblings, treeNode]));
+            }
+        }
+        if (idx < S.path.length - 1) st.expanded.add(tid);
+        prev = tid;
+    });
+};
+const getTreePathIdsFromState = () => {
+    if (!isTreeStandardMode() || !Array.isArray(S.path) || !S.path.length) return [];
+    return S.path.map(node => getTreeId(node && node.id));
+};
+const getTreePathKeyFromState = () => getTreePathIdsFromState().join('>');
+const scrollTreeActiveIntoView = () => {
+    if (!UI.treeList) return;
+    requestAnimationFrame(() => {
+        const active = UI.treeList.querySelector('.pk-tree-row.act');
+        if (!active) return;
+        const listRect = UI.treeList.getBoundingClientRect();
+        const rowRect = active.getBoundingClientRect();
+        if (rowRect.top < listRect.top || rowRect.bottom > listRect.bottom) {
+            active.scrollIntoView({ block: 'nearest' });
+        }
+    });
+};
+const getTreePathForNode = (id) => {
+    const st = getTreeState();
+    const tid = getTreeId(id);
+    if (tid === 'root') return [{ id: '', name: L.btn_nav_home }];
+    const mappedPath = st.pathMap.get(tid);
+    if (mappedPath && mappedPath.length > 0) return cloneTreePath(mappedPath);
+
+    const out = [];
+    let curId = tid;
+    let guard = 0;
+    while (curId && curId !== 'root' && guard < 80) {
+        const node = st.nodeMap.get(curId);
+        out.unshift({ id: curId, name: (node && node.name) || curId });
+        curId = st.parentMap.get(curId) || (node && node.parentId) || null;
+        guard++;
+    }
+    out.unshift({ id: '', name: L.btn_nav_home });
+    return out;
+};
+const resolveTreePathForNavigation = async (id) => {
+    const st = getTreeState();
+    const tid = getTreeId(id);
+    const fallback = getTreePathForNode(tid);
+    if (tid === 'root') return fallback;
+
+    try {
+        const chain = [];
+        let curId = tid;
+        let guard = 0;
+        while (curId && curId !== 'root' && guard < 40) {
+            const known = st.nodeMap.get(curId);
+            let detail = {
+                id: curId,
+                name: known && known.name ? known.name : curId,
+                parent_id: known && known.api_parent_id ? known.api_parent_id : ''
+            };
+
+            try {
+                detail = { ...detail, ...(await apiGet(curId)) };
+            } catch (e) {
+                if (!known) throw e;
+            }
+
+            const realId = String(detail.id || curId);
+            const realName = detail.name || (known && known.name) || realId;
+            chain.unshift({ id: realId, name: realName });
+
+            const parentId = getTreeId(detail.parent_id || detail.parentId || '');
+            if (!parentId || parentId === 'root' || parentId === realId) break;
+            curId = parentId;
+            guard++;
+        }
+
+        if (!chain.length) return fallback;
+        const resolved = [{ id: '', name: L.btn_nav_home }, ...chain];
+        resolved.forEach((node, idx) => {
+            const nodeTid = getTreeId(node.id);
+            const prev = idx > 0 ? getTreeId(resolved[idx - 1].id) : null;
+            st.nodeMap.set(nodeTid, { ...(st.nodeMap.get(nodeTid) || {}), id: nodeTid, kind: 'drive#folder', name: node.name, parentId: prev });
+            st.pathMap.set(nodeTid, cloneTreePath(resolved.slice(0, idx + 1)));
+            if (prev) st.parentMap.set(nodeTid, prev);
+        });
+        return resolved;
+    } catch (e) {
+        return fallback;
+    }
+};
+const renderTreePane = () => {
+    if (!UI.treeList || !UI.win) return;
+
+    const st = getTreeState();
+    UI.win.classList.toggle('pk-tree-collapsed', st.collapsed);
+    updateTreeSortButton();
+    if (st.collapsed) return;
+
+    const rootReady = st.loaded.has('root') || hydrateTreeChildrenFromCache('root', L.btn_nav_home);
+    const activeId = isTreeStandardMode() ? getTreeCurrentId() : '';
+    const folderIcon = CONF.typeIcons.folder.replace(/width="\d+"/, 'width="18"').replace(/height="\d+"/, 'height="18"');
+    const arrow = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg>`;
+    const spinner = `<span class="pk-spin-lg" style="width:12px;height:12px;border-width:2px;"></span>`;
+
+    const rows = [];
+    const pushNode = (node, depth) => {
+        const tid = getTreeId(node.id);
+        const loaded = st.loaded.has(tid);
+        const loading = st.loading.has(tid);
+        const children = st.children.get(tid) || [];
+        const hasChildren = loaded ? children.length > 0 : true;
+        const expanded = st.expanded.has(tid);
+        const isActive = tid === activeId;
+        const isError = st.errors.has(tid);
+        const rowClasses = ['pk-tree-row'];
+        if (expanded) rowClasses.push('exp');
+        if (isActive) rowClasses.push('act');
+        if (loading) rowClasses.push('pk-tree-loading');
+        if (isError) rowClasses.push('pk-tree-error');
+
+        const twist = hasChildren
+            ? `<button type="button" class="pk-tree-twist" data-tree-expander="1">${loading ? spinner : arrow}</button>`
+            : `<span class="pk-tree-spacer"></span>`;
+        const iconHtml = node.icon_link
+            ? `<img src="${esc(node.icon_link)}" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='inline-flex';"><span style="display:none;">${folderIcon}</span>`
+            : folderIcon;
+
+        rows.push(`
+            <div class="${rowClasses.join(' ')}" data-tree-id="${esc(tid)}" style="padding-left:${Math.max(2, depth * 14 + 2)}px;" data-pk-tip="${esc(node.name || L.btn_nav_home)}">
+                ${twist}
+                <span class="pk-tree-icon">${iconHtml}</span>
+                <span class="pk-tree-name">${esc(node.name || L.btn_nav_home)}</span>
+                ${tid === 'root' ? '' : getPcDownloadMarkHtml({ id: tid, kind: 'drive#folder', name: node.name || '', parent_id: getTreeApiId(node.parentId || '') }, 'pk-tree-pc-down-mark')}
+            </div>
+        `);
+
+        if (expanded && loaded && children.length > 0) {
+            children.forEach(child => pushNode(child, depth + 1));
+        } else if (expanded && isError) {
+            rows.push(`<div class="pk-tree-empty" style="text-align:left;padding-left:${Math.max(20, (depth + 1) * 14 + 26)}px;">${esc(L.str_load_failed)}</div>`);
+        }
+    };
+
+    pushNode({ id: 'root', kind: 'drive#folder', name: L.btn_nav_home, parentId: null }, 0);
+    UI.treeList.innerHTML = rootReady || st.loading.has('root')
+        ? rows.join('')
+        : `<div class="pk-tree-empty">${esc(L.loading)}</div>`;
+    scrollTreeActiveIntoView();
+};
+const ensureTreeChildren = async (parentId, force = false) => {
+    const st = getTreeState();
+    const tid = getTreeId(parentId);
+    if (!force && st.loaded.has(tid)) return true;
+    if (st.loading.has(tid)) return false;
+
+    if (!force && hydrateTreeChildrenFromCache(tid, st.nodeMap.get(tid)?.name || '')) {
+        renderTreePane();
+        return true;
+    }
+
+    st.loading.add(tid);
+    st.errors.delete(tid);
+    renderTreePane();
+
+    try {
+        if (tid === 'root' && !force && S.preLoadPromise) {
+            await Promise.race([S.preLoadPromise, sleep(1200)]);
+            if (hydrateTreeChildrenFromCache(tid, st.nodeMap.get(tid)?.name || L.btn_nav_home)) {
+                return true;
+            }
+        }
+
+        const apiId = getTreeApiId(tid);
+        const files = await apiList(apiId, 1000, null, null, false, true);
+        const cacheKey = tid === 'root' ? 'root' : tid;
+        if (typeof globalCache !== 'undefined') globalCache.set(cacheKey, files);
+        if (S.cache) S.cache.set(cacheKey, files);
+        if (typeof indexParents === 'function') indexParents(apiId, st.nodeMap.get(tid)?.name || L.btn_nav_home, files);
+        setTreeChildren(tid, files, st.nodeMap.get(tid)?.name || '');
+        return true;
+    } catch (e) {
+        st.errors.set(tid, e && e.message ? e.message : String(e || 'error'));
+        st.loaded.delete(tid);
+        return false;
+    } finally {
+        st.loading.delete(tid);
+        renderTreePane();
+    }
+};
+const trackTreeCurrentPath = () => {
+    if (!UI.treePane || !UI.treeList || !UI.win || !isTreeStandardMode()) return;
+    const st = getTreeState();
+    const pathIds = getTreePathIdsFromState();
+    if (!pathIds.length) return;
+
+    const ancestorIds = pathIds.slice(0, -1);
+    ancestorIds.forEach(id => st.expanded.add(id));
+    const pathKey = pathIds.join('>');
+    const needsLoad = ancestorIds.some(id => !st.loaded.has(id) && !st.loading.has(id));
+
+    if (!needsLoad) {
+        renderTreePane();
+        scrollTreeActiveIntoView();
+        return;
+    }
+
+    if (st.trackingPathKey === pathKey && st.trackingPathActive) return;
+    st.trackingPathKey = pathKey;
+    st.trackingPathActive = true;
+    const seq = (st.trackingPathSeq || 0) + 1;
+    st.trackingPathSeq = seq;
+
+    (async () => {
+        try {
+            for (const id of ancestorIds) {
+                if (st.trackingPathSeq !== seq || getTreePathKeyFromState() !== pathKey) return;
+                await ensureTreeChildren(id);
+            }
+            if (st.trackingPathSeq === seq && getTreePathKeyFromState() === pathKey) {
+                renderTreePane();
+                scrollTreeActiveIntoView();
+            }
+        } finally {
+            if (st.trackingPathSeq === seq) st.trackingPathActive = false;
+        }
+    })();
+};
+function syncTreePaneFromState() {
+    if (!UI.treePane || !UI.treeList || !UI.win) return;
+    const st = getTreeState();
+    UI.win.classList.toggle('pk-tree-collapsed', st.collapsed);
+
+    const standardMode = isTreeStandardMode();
+    if (standardMode) {
+        registerTreePath();
+        const cur = S.path[S.path.length - 1] || { id: '', name: L.btn_nav_home };
+        const curId = getTreeId(cur.id);
+        hydrateTreeChildrenFromCache(curId, cur.name || '');
+        if (Array.isArray(S.items) && S.items.length > 0) {
+            setTreeChildren(curId, S.items, cur.name || '');
+        }
+    }
+
+    if (!st.collapsed) {
+        renderTreePane();
+        if (standardMode) trackTreeCurrentPath();
+        else if (!st.loaded.has('root')) ensureTreeChildren('root');
+    }
+}
+const navigateTreeTo = async (treeId) => {
+    const st = getTreeState();
+    const tid = getTreeId(treeId);
+    if (S.scanning || S.loading) return;
+
+    S.starredMode = false; S.trashMode = false; S.shareMode = false; S.offlineMode = false;
+    S.recentMode = false; S.historyMode = false; S.uploadMode = false;
+    S.dupMode = false; S.isFlattened = false; S.analyzeMode = false;
+    if (UI.chkSearchPath) UI.chkSearchPath.checked = false;
+    if (UI.btnNavHome) UI.btnNavHome.classList.add('act');
+    if (UI.btnNavTrash) UI.btnNavTrash.classList.remove('act');
+    if (UI.btnNavShare) UI.btnNavShare.classList.remove('act');
+    if (UI.btnNavStarred) UI.btnNavStarred.classList.remove('act');
+    if (UI.btnNavRecent) UI.btnNavRecent.classList.remove('act');
+    if (UI.btnNavHistory) UI.btnNavHistory.classList.remove('act');
+    if (UI.btnNavOffline) UI.btnNavOffline.classList.remove('act');
+    if (UI.btnNavUpload) UI.btnNavUpload.classList.remove('act');
+
+    const nextPath = await resolveTreePathForNavigation(tid);
+    if (tid !== 'root') {
+        let cursor = tid;
+        let guard = 0;
+        while (cursor && cursor !== 'root' && guard < 80) {
+            const parentId = st.parentMap.get(cursor) || st.nodeMap.get(cursor)?.parentId || null;
+            if (parentId) st.expanded.add(parentId);
+            cursor = parentId;
+            guard++;
+        }
+    }
+
+    if (S.loadNavPath) {
+        await S.loadNavPath(nextPath, 'home');
+    } else {
+        S.path = nextPath;
+        await load();
+    }
+    syncTreePaneFromState();
+};
+const removeTreeNodeFromState = (treeId) => {
+    const st = getTreeState();
+    const tid = getTreeId(treeId);
+    if (tid === 'root') return;
+    st.nodeMap.delete(tid);
+    st.parentMap.delete(tid);
+    st.pathMap.delete(tid);
+    st.loaded.delete(tid);
+    st.children.delete(tid);
+    st.errors.delete(tid);
+    st.children.forEach((children, key) => {
+        if (!Array.isArray(children)) return;
+        const next = children.filter(child => child && child.id !== tid);
+        if (next.length !== children.length) st.children.set(key, next);
+    });
+};
+const ensureTreeContextItem = (treeId) => {
+    const st = getTreeState();
+    const tid = getTreeId(treeId);
+    if (!tid || tid === 'root') return null;
+    const node = st.nodeMap.get(tid);
+    if (!node) return null;
+
+    const parentTid = st.parentMap.get(tid) || node.parentId || 'root';
+    const parentId = getTreeApiId(parentTid);
+    let item = S.itemMap.get(tid);
+    if (!item && Array.isArray(S.items)) item = S.items.find(x => x && x.id === tid);
+    if (!item) {
+        item = {
+            id: tid,
+            kind: 'drive#folder',
+            name: node.name || tid,
+            parent_id: parentId,
+            icon_link: node.icon_link || '',
+            modified_time: node.modified_time || '',
+            created_time: node.created_time || '',
+            trashed: false
+        };
+    }
+
+    item.kind = 'drive#folder';
+    item.parent_id = item.parent_id || parentId;
+    item._tree_context_id = tid;
+    item._tree_context_parent_id = parentId;
+    S.itemMap.set(tid, item);
+    S._treeContextItem = item;
+    return item;
+};
+const placeContextMenu = (event, useFlexOrder = false) => {
+    UI.ctx.style.display = useFlexOrder ? 'flex' : 'block';
+    UI.ctx.style.flexDirection = useFlexOrder ? 'column' : '';
+
+    const scale = parseFloat(document.documentElement.style.getPropertyValue('--pk-zoom')) || 1;
+    let x = event.clientX / scale, y = event.clientY / scale, w = 160, h = UI.ctx.offsetHeight || 280;
+    let winW = window.innerWidth / scale, winH = window.innerHeight / scale;
+    if (x + w > winW) x = winW - w - 10;
+    if (y + h > winH) y = winH - h - 10;
+    UI.ctx.style.left = x + 'px';
+    UI.ctx.style.top = y + 'px';
+};
+const showTreeContextMenu = (event, treeId) => {
+    const item = ensureTreeContextItem(treeId);
+    if (!item) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    closeTreeSortMenu();
+
+    S.setAllSelection(false);
+    S.setSelected(item.id, true);
+    S.activeId = item.id;
+    S.lastSelIdx = -1;
+    S._treeContextActive = true;
+
+    UI.ctx.querySelectorAll('.pk-ctx-item').forEach(elm => elm.style.display = 'none');
+    UI.ctx.querySelectorAll('.pk-ctx-sep').forEach(elm => elm.style.display = 'none');
+
+    const itms = {
+        share: UI.ctx.querySelector('#ctx-share'),
+        open: UI.ctx.querySelector('#ctx-open'),
+        extPlay: UI.ctx.querySelector('#ctx-ext-play'),
+        star: UI.ctx.querySelector('#ctx-star'),
+        prop: UI.ctx.querySelector('#ctx-property'),
+        locate: UI.ctx.querySelector('#ctx-locate'),
+        down: UI.ctx.querySelector('#ctx-down'),
+        cpName: UI.ctx.querySelector('#ctx-copy-name'),
+        cut: UI.ctx.querySelector('#ctx-cut'),
+        copy: UI.ctx.querySelector('#ctx-copy'),
+        rename: UI.ctx.querySelector('#ctx-rename'),
+        prune: UI.ctx.querySelector('#ctx-prune'),
+        addBl: UI.ctx.querySelector('#ctx-add-bl'),
+        del: UI.ctx.querySelector('#ctx-del'),
+        sep1: UI.ctx.querySelector('#sep-1'),
+        sep2: UI.ctx.querySelector('#sep-2'),
+        sep3: UI.ctx.querySelector('#sep-3'),
+        sep4: UI.ctx.querySelector('#sep-4'),
+        sepShareExtra: UI.ctx.querySelector('#sep-share-extra')
+    };
+
+    if (itms.sepShareExtra) itms.sepShareExtra.style.display = 'none';
+    if (itms.share) itms.share.style.display = 'flex';
+    if (itms.sep1) itms.sep1.style.display = 'block';
+
+    if (itms.open) itms.open.style.display = 'flex';
+    if (itms.extPlay) itms.extPlay.style.display = 'none';
+    if (itms.locate) itms.locate.style.display = 'none';
+    if (itms.prop) itms.prop.style.display = 'flex';
+    if (itms.star) {
+        const isStarred = !!(item.starred || (item.tags && item.tags.some(t => t.name === 'STAR')));
+        itms.star.style.display = 'flex';
+        itms.star.innerHTML = isStarred ? `${ctxIcons.unstar} ${L.ctx_unstar}` : `${ctxIcons.star} ${L.ctx_star}`;
+        itms.star.setAttribute('data-action', isStarred ? 'unstar' : 'star');
+    }
+    if (itms.sep2) itms.sep2.style.display = 'block';
+
+    if (itms.down) itms.down.style.display = 'flex';
+    if (itms.cpName) itms.cpName.style.display = 'flex';
+    if (itms.sep3) itms.sep3.style.display = 'block';
+
+    if (itms.cut) itms.cut.style.display = 'flex';
+    if (itms.copy) itms.copy.style.display = 'flex';
+    if (itms.rename) {
+        itms.rename.style.display = 'flex';
+        itms.rename.innerHTML = `${ctxIcons.rename} ${L.ctx_rename}`;
+    }
+    if (itms.prune) itms.prune.style.display = 'flex';
+    if (itms.sep4) itms.sep4.style.display = 'block';
+    if (itms.del) {
+        itms.del.style.display = 'flex';
+        itms.del.innerHTML = `${ctxIcons.trash} ${L.ctx_del}`;
+    }
+    if (itms.addBl) {
+        itms.addBl.style.display = 'flex';
+        setBlacklistContextItemState(itms.addBl);
+    }
+
+    placeContextMenu(event);
+};
+if (UI.treeToggle) {
+    UI.treeToggle.onclick = (e) => {
+        e.stopPropagation();
+        const st = getTreeState();
+        st.collapsed = true;
+        gmSet('pk_tree_collapsed', true);
+        syncTreePaneFromState();
+    };
+}
+if (UI.treeRail) {
+    UI.treeRail.onclick = (e) => {
+        e.stopPropagation();
+        const st = getTreeState();
+        st.collapsed = false;
+        gmSet('pk_tree_collapsed', false);
+        syncTreePaneFromState();
+    };
+}
+if (UI.treeRefresh) {
+    UI.treeRefresh.onclick = (e) => {
+        e.stopPropagation();
+        const st = getTreeState();
+        const targetId = isTreeStandardMode() ? getTreeCurrentId() : 'root';
+        st.loaded.delete(targetId);
+        st.children.delete(targetId);
+        st.errors.delete(targetId);
+        st.expanded.add(targetId);
+        ensureTreeChildren(targetId, true);
+    };
+}
+const closeTreeSortMenu = () => {
+    if (UI.treeSortWrap) UI.treeSortWrap.classList.remove('open');
+};
+if (UI.treeSort) {
+    UI.treeSort.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        renderTreeSortMenu();
+        if (UI.treeSortWrap) UI.treeSortWrap.classList.toggle('open');
+    };
+}
+if (UI.treeSortMenu) {
+    UI.treeSortMenu.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const optEl = e.target.closest('.pk-tree-sort-opt');
+        if (!optEl) return;
+        const mode = normalizeTreeSortMode(optEl.dataset.treeSort);
+        const st = getTreeState();
+        st.sortMode = mode;
+        gmSet(TREE_SORT_KEY, mode);
+        resortTreeChildren();
+        closeTreeSortMenu();
+        updateTreeSortButton();
+        renderTreePane();
+    };
+}
+if (el) {
+    el.addEventListener('click', (e) => {
+        if (!e.target.closest('#pk-tree-sort-wrap')) closeTreeSortMenu();
+    }, true);
+}
+if (UI.treeList) {
+    UI.treeList.oncontextmenu = (e) => {
+        const row = e.target.closest('.pk-tree-row');
+        if (!row) return;
+        showTreeContextMenu(e, row.dataset.treeId || 'root');
+    };
+    UI.treeList.onclick = (e) => {
+        const row = e.target.closest('.pk-tree-row');
+        if (!row) return;
+        e.stopPropagation();
+        const tid = row.dataset.treeId || 'root';
+        const st = getTreeState();
+
+        if (e.target.closest('[data-tree-expander]')) {
+            if (st.expanded.has(tid)) {
+                st.expanded.delete(tid);
+            } else {
+                st.expanded.add(tid);
+                ensureTreeChildren(tid);
+            }
+            renderTreePane();
+            return;
+        }
+
+        navigateTreeTo(tid);
+    };
+}
+syncTreePaneFromState();
+
 const showCrumbDropdown = async (e, parentId, triggerEl) => {
     const getLiveTriggerEl = () => {
         if (triggerEl && triggerEl.isConnected) return triggerEl;
@@ -15863,6 +17231,9 @@ const showCrumbDropdown = async (e, parentId, triggerEl) => {
 };
 
 function renderCrumb() {
+    try {
+        if (typeof syncTreePaneFromState === 'function') syncTreePaneFromState();
+    } catch (e) {}
     UI.crumb.innerHTML = '';
 
     if (S.offlineMode) {
@@ -16504,6 +17875,12 @@ const mouseHandler = (e) => {
     if (UI.ctx.style.display !== 'none' && !UI.ctx.contains(e.target)) {
         UI.ctx.style.display = 'none';
         UI.ctx.style.flexDirection = '';
+        if (S._treeContextActive) {
+            S._treeContextActive = false;
+            S._treeContextItem = null;
+            renderVisible();
+            updateStat();
+        }
 
         const isRoot = S.path.length === 1 && S.path[0].id === '';
         if (!S.trashMode && isRoot && S.getSelectedCount() === 1) {
@@ -16724,6 +18101,15 @@ function updateStat() {
 
     const hasClipData = S.clipItems && S.clipItems.length > 0;
     const isPasteLocked = S.movingIds && S.movingIds.size > 0;
+
+    if (UI.btnDelDownloaded) {
+        const downloadedDeleteCandidates = isPcDownloadedBatchDeleteView() ? getPcDownloadedDeleteCandidates() : [];
+        const isHidden = downloadedDeleteCandidates.length === 0 && !isPcDownloadedBatchDeleteView();
+        UI.btnDelDownloaded.style.display = isHidden ? 'none' : 'inline-flex';
+        UI.btnDelDownloaded.disabled = downloadedDeleteCandidates.length === 0 || isPasteLocked || S.loading;
+        UI.btnDelDownloaded.style.opacity = UI.btnDelDownloaded.disabled ? '0.45' : '1';
+        UI.btnDelDownloaded.style.cursor = UI.btnDelDownloaded.disabled ? (isPasteLocked ? 'wait' : 'not-allowed') : 'pointer';
+    }
 
     if (UI.btnPaste) {
         UI.btnPaste.disabled = !hasClipData || isPasteLocked;
@@ -17421,6 +18807,81 @@ const getBestSource = (data) => {
     bestMatch.active = true;
     return { src: bestMatch.link, name: bestMatch.name, list: list };
 };
+
+const getBuiltInPlayerLabel = () => {
+    const lang = getLang();
+    if (lang === 'ko') return '자체 플레이어';
+    if (lang === 'en') return 'Built-in Player';
+    if (lang === 'ja') return '内蔵プレーヤー';
+    if (lang === 'tc') return '內建播放器';
+    return '内置播放器';
+};
+
+const getBuiltInPlayerMenuHtml = () => `${CONF.icons.ext} ${getBuiltInPlayerLabel()}`;
+
+const getExternalPlayableId = (item) => {
+    if (!item) return '';
+    if ((S.offlineMode && item.kind === 'drive#task') || (S.uploadMode && item.file_id)) {
+        return item.file_id || item.id || '';
+    }
+    return item.id || '';
+};
+
+const cleanExternalPlayUrl = (url) => {
+    let cleanUrl = String(url || '').replace('&ext=.m3u8', '');
+    if (cleanUrl.includes('ts_downloader') && cleanUrl.includes('url=')) {
+        try {
+            const urlParam = new URL(cleanUrl).searchParams.get('url');
+            if (urlParam) cleanUrl = decodeURIComponent(urlParam);
+        } catch (e) {}
+    }
+    return cleanUrl;
+};
+
+async function playWithPotPlayer(item) {
+    if (!item || S.trashMode) return;
+
+    const L = getStrings();
+    setLoad(true);
+    updateLoadTxt(L.loading_detail);
+
+    const targetApiId = getExternalPlayableId(item);
+    let detail = item;
+
+    try {
+        if (!targetApiId) throw new Error("File ID not ready");
+        detail = await apiGet(targetApiId);
+    } catch (e) {
+        if (!detail.web_content_link && !detail.medias) {
+            setLoad(false);
+            showToast(L.msg_video_fail, 'error');
+            return;
+        }
+    }
+
+    setLoad(false);
+
+    const bestSource = getBestSource(detail);
+    const cleanUrl = cleanExternalPlayUrl(bestSource.src);
+
+    if (!cleanUrl) {
+        showToast(L.msg_video_fail, 'error');
+        return;
+    }
+
+    launchPotPlayerWithFallback(cleanUrl, {
+        source: 'normal',
+        failToastDuration: 6500,
+        failCloseDelay: 3200,
+        onLikelyFail: (ctx) => {
+            schedulePotPlayerAutoRepairPrompt(cleanUrl, {
+                source: 'normal',
+                autoRepairPrompt: ctx && ctx.autoRepairPrompt,
+                autoRepairPromptDelay: ctx && ctx.autoRepairPromptDelay
+            });
+        }
+    });
+}
 
 const launchPotPlayerWithFallback = (cleanUrl, opts = {}) => {
     const L = getStrings();
@@ -26185,7 +27646,10 @@ UI.btnCopy.onclick = async () => {
     S.clipItems = itemList;
     S.clipType = 'copy';
 
-    const curId = S.path[S.path.length - 1].id || '';
+    const treeSourceParentId = itemList.length === 1 && itemList[0] && itemList[0]._tree_context_parent_id !== undefined
+        ? itemList[0]._tree_context_parent_id
+        : null;
+    const curId = treeSourceParentId !== null ? treeSourceParentId : (S.path[S.path.length - 1].id || '');
 
     S.clipSourceParentId = S.isFlattened ? '__VIRTUAL__' : curId;
 
@@ -26224,7 +27688,10 @@ UI.btnCut.onclick = async () => {
     S.clipItems = itemList;
     S.clipType = 'move';
 
-    const curId = S.path[S.path.length - 1].id || '';
+    const treeSourceParentId = itemList.length === 1 && itemList[0] && itemList[0]._tree_context_parent_id !== undefined
+        ? itemList[0]._tree_context_parent_id
+        : null;
+    const curId = treeSourceParentId !== null ? treeSourceParentId : (S.path[S.path.length - 1].id || '');
 
     S.clipSourceParentId = S.isFlattened ? '__VIRTUAL__' : curId;
 
@@ -28264,7 +29731,7 @@ UI.btnExt.onclick = async () => {
     setLoad(true);
     updateLoadTxt(L.loading_detail);
 
-    const targetApiId = ((S.offlineMode && item.kind === 'drive#task') || (S.uploadMode && item.file_id)) ? item.file_id : item.id;
+    const targetApiId = getExternalPlayableId(item);
 
     let detail = item;
     try {
@@ -28359,14 +29826,7 @@ UI.btnExt.onclick = async () => {
     const fixBtn = m.querySelector('#ext_potplayer_fix');
 
     const getCleanSelectedUrl = () => {
-        let cleanUrl = String(selectedUrl || '').replace('&ext=.m3u8', '');
-        if (cleanUrl.includes('ts_downloader') && cleanUrl.includes('url=')) {
-            try {
-                const urlParam = new URL(cleanUrl).searchParams.get('url');
-                if (urlParam) cleanUrl = decodeURIComponent(urlParam);
-            } catch (e) {}
-        }
-        return cleanUrl;
+        return cleanExternalPlayUrl(selectedUrl);
     };
 
     const updatePotPlayerFixEntry = () => {
@@ -28463,6 +29923,459 @@ if (UI.btnImgSearch) {
     };
 }
 
+const clampNasBatchSize = (value) => {
+    const parsed = parseInt(value, 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) return 25;
+    return Math.max(1, Math.min(200, parsed));
+};
+
+const clampNasConcurrency = (value) => {
+    const parsed = parseInt(value, 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) return 2;
+    return Math.max(1, Math.min(8, parsed));
+};
+
+const clampNasSegments = (value) => {
+    const parsed = parseInt(value, 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) return 4;
+    return Math.max(1, Math.min(8, parsed));
+};
+
+const normalizeNasWorkerUrl = (url) => {
+    let text = String(url || '').trim();
+    if (!text) return '';
+    if (!/^https?:\/\//i.test(text)) text = 'http://' + text;
+    return text.replace(/\/+$/, '');
+};
+
+const isTruthySetting = (value) => value === true || value === 1 || ['true', '1', 'yes', 'on'].includes(String(value || '').trim().toLowerCase());
+
+const getNasDownloadConfig = () => {
+    const url = normalizeNasWorkerUrl(gmGet('pk_nas_worker_url', ''));
+    const token = String(gmGet('pk_nas_worker_token', '') || '').trim();
+    return {
+        enabled: isTruthySetting(gmGet('pk_nas_enabled', false)) || (!!url && !!token),
+        url,
+        token,
+        batchSize: clampNasBatchSize(gmGet('pk_nas_batch_size', '25')),
+        concurrency: clampNasConcurrency(gmGet('pk_nas_concurrency', '2')),
+        segments: clampNasSegments(gmGet('pk_nas_segments', '4'))
+    };
+};
+
+const getDownloadButtonText = () => {
+    const cfg = getNasDownloadConfig();
+    return cfg.enabled ? (L.label_nas_download || 'NAS Download') : L.btn_down;
+};
+
+const refreshDownloadButtonMode = () => {
+    const btn = UI && UI.btnDown;
+    if (!btn) return;
+    const span = btn.querySelector('span');
+    const text = getDownloadButtonText();
+    if (span) span.textContent = text;
+    btn.setAttribute('data-pk-tip', text);
+    const ctxDown = UI.ctx && UI.ctx.querySelector('#ctx-down');
+    if (ctxDown && ctxDown.childNodes && ctxDown.childNodes.length > 1) {
+        ctxDown.childNodes[1].textContent = ` ${text}`;
+    }
+};
+refreshDownloadButtonMode();
+
+const buildNasRelativePath = (file) => {
+    const parts = [];
+    if (file && Array.isArray(file._lineage)) {
+        file._lineage.forEach(node => {
+            const name = node && node.name ? String(node.name).trim() : '';
+            if (name) parts.push(name);
+        });
+    }
+    const name = file && file.name ? String(file.name).trim() : 'download.bin';
+    parts.push(name || 'download.bin');
+    return parts.join('/');
+};
+
+const nasWorkerRequest = (cfg, path, opts = {}, timeout = 30000) => new Promise((resolve, reject) => {
+    const method = opts.method || 'GET';
+    const headers = Object.assign({
+        'Accept': 'application/json',
+        'X-PikPak-NAS-Token': cfg.token
+    }, opts.headers || {});
+    let body = opts.body;
+    if (body !== undefined) {
+        headers['Content-Type'] = 'application/json';
+        if (typeof body !== 'string') body = JSON.stringify(body);
+    }
+    const url = cfg.url + path;
+
+    if (typeof GM_xmlhttpRequest === 'function') {
+        GM_xmlhttpRequest({
+            method,
+            url,
+            headers,
+            data: body,
+            timeout,
+            onload: (res) => {
+                let data = {};
+                try {
+                    data = res.responseText ? JSON.parse(res.responseText) : {};
+                } catch (e) {
+                    reject(new Error(`Invalid NAS response: ${e.message}`));
+                    return;
+                }
+                if (res.status >= 200 && res.status < 300) {
+                    resolve(data);
+                } else {
+                    reject(new Error((data && data.error) || `NAS HTTP ${res.status}`));
+                }
+            },
+            onerror: () => reject(new Error('NAS Network Error')),
+            ontimeout: () => reject(new Error('NAS Timeout'))
+        });
+        return;
+    }
+
+    fetch(url, { method, headers, body })
+    .then(async res => {
+        const text = await res.text();
+        let data = {};
+        if (text) data = JSON.parse(text);
+        if (!res.ok) throw new Error((data && data.error) || `NAS HTTP ${res.status}`);
+        resolve(data);
+    })
+    .catch(reject);
+});
+
+const getNasWorkerRuntimeInfo = async (cfg) => {
+    try {
+        return await nasWorkerRequest(cfg, '/health', {}, 10000);
+    } catch (e) {
+        console.warn('[NAS] health check failed:', e);
+        return null;
+    }
+};
+
+const applyNasWorkerRuntimeConfig = async (cfg) => {
+    const desiredConcurrency = clampNasConcurrency(cfg && cfg.concurrency);
+    try {
+        return await nasWorkerRequest(cfg, '/config', {
+            method: 'POST',
+            body: { concurrency: desiredConcurrency }
+        }, 10000);
+    } catch (e) {
+        console.warn('[NAS] runtime config apply failed:', e);
+        return getNasWorkerRuntimeInfo(cfg);
+    }
+};
+
+const nasNumber = (value) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const nasProgressPercent = (done, total) => {
+    if (!total || total <= 0) return 0;
+    return Math.max(0, Math.min(100, Math.round((done / total) * 100)));
+};
+
+const formatNasEta = (seconds) => {
+    if (!Number.isFinite(seconds) || seconds < 0) return '';
+    seconds = Math.round(seconds);
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    return `${m}:${String(s).padStart(2, '0')}`;
+};
+
+const nasProgressSnapshots = new Map();
+
+const getNasProgressMetrics = (job, item) => {
+    const now = Date.now();
+    const jobId = String((job && job.id) || 'nas');
+    const itemId = String((item && item.id) || '');
+    const itemBytesDone = nasNumber(item && item.bytesDone);
+    const itemBytesTotal = nasNumber(item && (item.bytesTotal || item.size));
+    const jobBytesDone = nasNumber(job && job.bytesDone);
+    const jobBytesTotal = nasNumber(job && job.bytesTotal);
+    const prev = nasProgressSnapshots.get(jobId);
+    let itemSpeed = 0;
+    let jobSpeed = 0;
+    if (prev && now > prev.at) {
+        const dt = (now - prev.at) / 1000;
+        if (prev.itemId === itemId) itemSpeed = Math.max(0, (itemBytesDone - prev.itemBytesDone) / dt);
+        jobSpeed = Math.max(0, (jobBytesDone - prev.jobBytesDone) / dt);
+    }
+    nasProgressSnapshots.set(jobId, { at: now, itemId, itemBytesDone, jobBytesDone });
+    return {
+        itemSpeed,
+        jobSpeed,
+        itemEta: itemSpeed > 0 && itemBytesTotal > itemBytesDone ? (itemBytesTotal - itemBytesDone) / itemSpeed : 0,
+        jobEta: jobSpeed > 0 && jobBytesTotal > jobBytesDone ? (jobBytesTotal - jobBytesDone) / jobSpeed : 0
+    };
+};
+
+const getNasDisplayItem = (job) => {
+    const items = Array.isArray(job && job.items) ? job.items : [];
+    return items.find(item => item.status === 'running') ||
+        items.find(item => item.status === 'queued') ||
+        items.find(item => item.status === 'failed') ||
+        [...items].reverse().find(item => item.status === 'done' || item.status === 'skipped_existing') ||
+        items[0] ||
+        null;
+};
+
+const getNasItemLabel = (item) => {
+    if (!item) return '';
+    return String(item.relativePath || item.name || '').replace(/\\/g, '/');
+};
+
+const formatNasJobProgress = (job, prefix = '') => {
+    const total = nasNumber(job && job.total);
+    const done = nasNumber(job && job.done);
+    const failed = nasNumber(job && job.failed);
+    const canceled = nasNumber(job && job.canceled);
+    const finished = done + failed + canceled;
+    const bytesDone = job && job.bytesDone ? fmtSize(job.bytesDone) : '';
+    const bytesTotal = job && job.bytesTotal ? fmtSize(job.bytesTotal) : '';
+    const sizeText = bytesTotal ? ` | ${bytesDone} / ${bytesTotal}` : '';
+    return `${prefix || L.msg_nas_progress || 'NAS download'} ${finished} / ${total}${sizeText}`;
+};
+
+const formatNasJobProgressHtml = (job, prefix = '', metrics = null, runtimeInfo = null) => {
+    const total = nasNumber(job && job.total);
+    const done = nasNumber(job && job.done);
+    const failed = nasNumber(job && job.failed);
+    const canceled = nasNumber(job && job.canceled);
+    const running = nasNumber(job && job.running);
+    const finished = done + failed + canceled;
+    const bytesDone = nasNumber(job && job.bytesDone);
+    const bytesTotal = nasNumber(job && job.bytesTotal);
+    const percent = nasProgressPercent(bytesDone, bytesTotal);
+    const item = getNasDisplayItem(job);
+    const fileLabel = getNasItemLabel(item) || `${finished} / ${total}`;
+    const itemBytesDone = nasNumber(item && item.bytesDone);
+    const itemBytesTotal = nasNumber(item && (item.bytesTotal || item.size));
+    const itemPercent = nasProgressPercent(itemBytesDone, itemBytesTotal);
+    const status = item && item.status ? String(item.status) : '';
+    const sizeText = bytesTotal ? `${fmtSize(bytesDone)} / ${fmtSize(bytesTotal)}` : '';
+    const itemSizeText = itemBytesTotal ? `${fmtSize(itemBytesDone)} / ${fmtSize(itemBytesTotal)}` : '';
+    const errorText = item && item.error ? String(item.error) : '';
+    const barWidth = bytesTotal ? percent : itemPercent;
+    const progressText = bytesTotal ? `${percent}%` : (itemBytesTotal ? `${itemPercent}%` : '');
+    const speedText = metrics && metrics.itemSpeed > 0 ? `${fmtSize(metrics.itemSpeed)}/s` : '';
+    const etaText = metrics && metrics.itemEta > 0 ? `ETA ${formatNasEta(metrics.itemEta)}` : '';
+    const itemSegments = nasNumber(item && item.segments);
+    const modeText = item && item.downloadMode === 'segmented' ? `seg${itemSegments > 1 ? ` x${itemSegments}` : ''}` : '';
+    const workerConcurrency = nasNumber(runtimeInfo && runtimeInfo.concurrency);
+    const concurrencyText = workerConcurrency > 0 ? `${L.label_nas_worker_concurrency || 'Concurrency'} ${running}/${workerConcurrency}` : '';
+    const subText = [status, itemSizeText || sizeText, speedText, etaText, modeText].filter(Boolean).join(' | ');
+    const detailText = errorText || subText;
+
+    return `
+        <div style="width:min(520px, calc(100vw - 96px)); white-space:normal;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px;">
+                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(prefix || L.msg_nas_progress || 'NAS download')} ${finished} / ${total}</span>
+                <span style="flex:0 0 auto; font-variant-numeric:tabular-nums;">${esc([concurrencyText, progressText].filter(Boolean).join(' | '))}</span>
+            </div>
+            <div style="height:7px; border-radius:999px; overflow:hidden; background:rgba(128,128,128,.28); margin-bottom:6px;">
+                <div style="width:${barWidth}%; height:100%; border-radius:999px; background:var(--pk-pri); transition:width .25s ease;"></div>
+            </div>
+            <div title="${esc(fileLabel)}" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700;">${esc(fileLabel)}</div>
+            ${detailText ? `<div title="${esc(detailText)}" style="opacity:.78; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; margin-top:2px;">${esc(detailText)}</div>` : ''}
+        </div>
+    `;
+};
+
+const updateNasProgressTask = (progressTask, job, prefix = '', runtimeInfo = null) => {
+    if (!progressTask) return;
+    const item = getNasDisplayItem(job);
+    const metrics = getNasProgressMetrics(job, item);
+    if (typeof progressTask.updateHtml === 'function') progressTask.updateHtml(formatNasJobProgressHtml(job, prefix, metrics, runtimeInfo));
+    else progressTask.update(formatNasJobProgress(job, prefix));
+};
+
+const pollNasDownloadJob = async (cfg, jobId, progressTask, signal, prefix, runtimeInfo = null) => {
+    let lastJob = null;
+    while (true) {
+        if (signal && signal.aborted) {
+            try { await nasWorkerRequest(cfg, `/jobs/${encodeURIComponent(jobId)}/cancel`, { method: 'POST' }, 10000); } catch (e) {}
+            throw new Error('StoppedByUser');
+        }
+        lastJob = await nasWorkerRequest(cfg, `/jobs/${encodeURIComponent(jobId)}`, {}, 30000);
+        updateNasProgressTask(progressTask, lastJob, prefix, runtimeInfo);
+        if (lastJob && ['done', 'partial', 'failed', 'canceled'].includes(lastJob.status)) {
+            nasProgressSnapshots.delete(String(lastJob.id || jobId));
+            return lastJob;
+        }
+        await sleep(2500);
+    }
+};
+
+const nasProgressMonitors = new Map();
+let nasResumeProgressStarted = false;
+
+const isNasJobActive = (job) => job && ['queued', 'running'].includes(String(job.status || ''));
+
+const getNasCompletedFilesFromJob = (job) => {
+    const out = [];
+    const items = Array.isArray(job && job.items) ? job.items : [];
+    items.forEach(item => {
+        if (!item || !['done', 'skipped_existing'].includes(item.status)) return;
+        const id = String(item.cloudId || item.fileId || item.file_id || '').trim();
+        if (!id) return;
+        out.push({
+            id,
+            kind: 'drive#file',
+            name: item.name || item.relativePath || '',
+            size: item.size || item.bytesTotal || 0,
+            _pc_download_parent_id: item.cloudParentId || item.parent_id || ''
+        });
+    });
+    return out;
+};
+
+const monitorNasJobProgress = async (cfg, job, runtimeInfo = null, opts = {}) => {
+    const jobId = String(job && job.id || '');
+    if (!jobId || nasProgressMonitors.has(jobId)) return;
+    const abortCtrl = new AbortController();
+    const prefix = opts.resumed ? (L.msg_nas_progress_resumed || `${L.msg_nas_progress || 'NAS download'} (resumed)`) : (L.msg_nas_progress || 'NAS download');
+    let progressTask = null;
+    try {
+        progressTask = FloatBarManager.create(prefix, {
+            actionText: L.msg_nas_cancel || L.btn_cancel || 'Cancel',
+            onAction: async () => {
+                abortCtrl.abort();
+                if (progressTask) progressTask.update(L.msg_nas_canceling || 'Canceling NAS download...');
+                try { await nasWorkerRequest(cfg, `/jobs/${encodeURIComponent(jobId)}/cancel`, { method: 'POST' }, 10000); } catch (e) {}
+            }
+        });
+        nasProgressMonitors.set(jobId, { progressTask, abortCtrl });
+        updateNasProgressTask(progressTask, job, prefix, runtimeInfo);
+        const finalJob = await pollNasDownloadJob(cfg, jobId, progressTask, abortCtrl.signal, prefix, runtimeInfo);
+        const completedFiles = getNasCompletedFilesFromJob(finalJob);
+        if (completedFiles.length && markPcDownloadedItems(completedFiles)) {
+            if (typeof renderVisible === 'function') renderVisible();
+            if (typeof renderTreePane === 'function') renderTreePane();
+        }
+        if (finalJob && finalJob.status === 'canceled') showToast(L.msg_nas_canceled || 'NAS download canceled.');
+    } catch (e) {
+        if (e && e.message === 'StoppedByUser') showToast(L.msg_nas_canceled || 'NAS download canceled.');
+        else console.warn('[NAS] progress monitor failed:', e);
+    } finally {
+        nasProgressMonitors.delete(jobId);
+        if (progressTask) progressTask.destroy();
+    }
+};
+
+const resumeNasProgressMonitors = async () => {
+    if (nasResumeProgressStarted) return;
+    nasResumeProgressStarted = true;
+    const cfg = getNasDownloadConfig();
+    if (!cfg.enabled || !cfg.url || !cfg.token) return;
+    try {
+        const runtimeInfo = await getNasWorkerRuntimeInfo(cfg);
+        const data = await nasWorkerRequest(cfg, '/jobs', {}, 10000);
+        const activeJobs = (Array.isArray(data && data.jobs) ? data.jobs : []).filter(isNasJobActive).slice(0, 4);
+        activeJobs.forEach(job => {
+            monitorNasJobProgress(cfg, job, runtimeInfo, { resumed: true });
+        });
+    } catch (e) {
+        console.warn('[NAS] progress resume failed:', e);
+    }
+};
+
+const sendNasDownloadBatches = async (files, options = {}) => {
+    const cfg = getNasDownloadConfig();
+    const completedFiles = [];
+    const failedItems = [];
+    let failedCount = 0;
+    if (!cfg.enabled) return { completedFiles, failedCount };
+    if (!cfg.url || !cfg.token) throw new Error(L.msg_nas_not_configured || 'NAS worker is not configured.');
+    const runtimeInfo = await applyNasWorkerRuntimeConfig(cfg);
+
+    for (let start = 0; start < files.length; start += cfg.batchSize) {
+        if (options.signal && options.signal.aborted) throw new Error('StoppedByUser');
+        const chunk = files.slice(start, start + cfg.batchSize);
+        const itemMap = new Map();
+        const itemPathMap = new Map();
+        const itemNameMap = new Map();
+        const items = chunk.map((file, idx) => {
+            const itemId = `${file.id || 'file'}_${start + idx}_${Date.now().toString(36)}`;
+            const relativePath = buildNasRelativePath(file);
+            const isEmpty = isZeroByteFile(file);
+            itemMap.set(itemId, file);
+            itemPathMap.set(relativePath, file);
+            if (file && file.name) itemNameMap.set(String(file.name), file);
+            return {
+                id: itemId,
+                cloudId: file.id || '',
+                cloudParentId: getPcDownloadParentId(file) || file.parent_id || '',
+                name: file.name || 'download.bin',
+                size: parseInt(file.size || 0, 10) || 0,
+                relativePath,
+                url: isEmpty ? '' : getTransferDownloadUrl(file),
+                empty: isEmpty,
+                segments: cfg.segments,
+                headers: {
+                    'User-Agent': navigator.userAgent,
+                    'Referer': 'https://mypikpak.com/'
+                }
+            };
+        });
+
+        const batchText = `${start + 1}-${start + chunk.length} / ${files.length}`;
+        if (options.progressTask) options.progressTask.update(`${L.msg_nas_submitting || 'Sending download job to NAS...'} ${batchText}`);
+        const job = await nasWorkerRequest(cfg, '/jobs', { method: 'POST', body: { items, concurrency: cfg.concurrency } }, Math.max(30000, chunk.length * 1000));
+        const jobId = String(job && job.id || '');
+        if (jobId) nasProgressMonitors.set(jobId, { progressTask: options.progressTask });
+        let finalJob;
+        try {
+            finalJob = await pollNasDownloadJob(cfg, job.id, options.progressTask, options.signal, `${L.msg_nas_progress || 'NAS download'} ${batchText}`, runtimeInfo);
+        } finally {
+            if (jobId) nasProgressMonitors.delete(jobId);
+        }
+        const completedOriginalIds = new Set();
+        const findOriginalFile = (item) => {
+            if (!item) return null;
+            return itemMap.get(String(item.id || '')) ||
+                itemPathMap.get(String(item.relativePath || '')) ||
+                itemNameMap.get(String(item.name || '')) ||
+                null;
+        };
+
+        (finalJob.items || []).forEach(item => {
+            const original = findOriginalFile(item);
+            if (item.status === 'done' || item.status === 'skipped_existing') {
+                if (original) completedFiles.push(original);
+                if (original && original.id) completedOriginalIds.add(String(original.id));
+            } else if (item.status === 'failed' || item.status === 'canceled') {
+                failedCount++;
+                failedItems.push({
+                    name: item.relativePath || item.name || (original && original.name) || '',
+                    status: item.status,
+                    error: item.error || ''
+                });
+            }
+        });
+        if (finalJob.status === 'failed' && (!finalJob.items || finalJob.items.length === 0)) failedCount += chunk.length;
+        if ((finalJob.status === 'done' || (finalJob.done === chunk.length && !finalJob.failed && !finalJob.canceled)) && completedOriginalIds.size < chunk.length) {
+            chunk.forEach(file => {
+                const id = file && file.id ? String(file.id) : '';
+                if (!id || completedOriginalIds.has(id)) return;
+                completedFiles.push(file);
+                completedOriginalIds.add(id);
+            });
+        }
+    }
+
+    return { completedFiles, failedCount, failedItems };
+};
+
+setTimeout(() => {
+    try { resumeNasProgressMonitors(); } catch (e) { console.warn('[NAS] progress resume schedule failed:', e); }
+}, 1200);
+
 UI.win.querySelector('#pk-down').onclick = async () => {
     const selectedIds = S.getSelectedIds();
     const hasConflict = selectedIds.some(id => {
@@ -28490,12 +30403,13 @@ UI.win.querySelector('#pk-down').onclick = async () => {
     selectedIds.forEach(id => {
         const item = S.itemMap.get(id);
         if (item) {
-            if (item.kind === 'drive#folder') rootNodes.push({...item, lineage:[], retryCount: 0});
-            else allFiles.push(item);
+            if (item.kind === 'drive#folder') rootNodes.push({...item, lineage:[{ id: item.id, name: item.name }], retryCount: 0});
+            else allFiles.push({ ...item, _lineage: [], _pc_download_parent_id: getPcDownloadParentId(item) || (S.path[S.path.length - 1]?.id || '') });
         }
     });
 
     let progressTask = null;
+    let nasDownloadActive = false;
     const fExtStr = gmGet('pk_dl_filter_ext', '').toLowerCase();
     const fNameStr = gmGet('pk_dl_filter_name', '').toLowerCase();
     const fExts = fExtStr.split(/[,，]/).map(s => s.trim().replace(/^\./, '')).filter(Boolean);
@@ -28523,7 +30437,7 @@ UI.win.querySelector('#pk-down').onclick = async () => {
     try {
         await coreRecursiveEngine(rootNodes, {
             signal,
-            onFile: (f) => {
+            onFile: (f, parent) => {
                 filterStats.scanned++;
                 const lowName = f.name.toLowerCase();
                 const ext = lowName.split('.').pop();
@@ -28537,7 +30451,7 @@ UI.win.querySelector('#pk-down').onclick = async () => {
                     filterStats.blocked++;
                     return;
                 }
-                allFiles.push(f);
+                allFiles.push({ ...f, _lineage: parent.lineage || [], _pc_download_parent_id: getPcDownloadParentId(f, parent) });
             },
             onProgress: (st) => {
                 updateLoadTxt(`${L.msg_batch_scanning}\n${L.str_files}: ${allFiles.length} | ${L.str_speed}: ${st.currentConcurrency}`);
@@ -28558,11 +30472,19 @@ UI.win.querySelector('#pk-down').onclick = async () => {
             showToast(L.msg_batch_filtered.replace('{n}', filterStats.blocked));
         }
 
+        const nasCfg = getNasDownloadConfig();
+        nasDownloadActive = !!nasCfg.enabled;
+        if (nasCfg.enabled && (!nasCfg.url || !nasCfg.token)) {
+            setLoad(false);
+            showAlert(L.msg_nas_not_configured || 'NAS worker is not configured.');
+            return;
+        }
+
         let totalBytes = 0;
         for (let i = 0; i < allFiles.length; i++) {
             totalBytes += parseInt((allFiles[i] && allFiles[i].size) || 0, 10) || 0;
         }
-        const needsSoftConfirm = allFiles.length > CONF.browserDownloadConfirmFileCount || totalBytes > CONF.browserDownloadConfirmTotalBytes;
+        const needsSoftConfirm = !nasCfg.enabled && (allFiles.length > CONF.browserDownloadConfirmFileCount || totalBytes > CONF.browserDownloadConfirmTotalBytes);
 
         setLoad(false);
         if (needsSoftConfirm) {
@@ -28574,20 +30496,28 @@ UI.win.querySelector('#pk-down').onclick = async () => {
             if (!await showConfirm(confirmText)) return;
         }
 
-        progressTask = FloatBarManager.create(L.msg_batch_hydrating);
+        progressTask = FloatBarManager.create(L.msg_batch_hydrating, nasCfg.enabled ? {
+            actionText: L.msg_nas_cancel || L.btn_cancel || 'Cancel',
+            onAction: () => {
+                if (!isRunning) return;
+                isRunning = false;
+                abortCtrl.abort();
+                if (progressTask) progressTask.update(L.msg_nas_canceling || L.str_stopping || 'Canceling...');
+            }
+        } : {});
 
         const readyFiles = [];
         const hydrateQueue = [...allFiles];
         const activeTasks = new Set();
         const hydrateWithRetry = async (file, maxRetries = 3) => {
-            if (file.web_content_link) return file;
+            if (file.web_content_link) return await resolveDownloadDetailForTransfer(file);
             if (file.phase === "PHASE_TYPE_PENDING" || file.phase === "PHASE_TYPE_RUNNING" || file.trashed) return null;
             let lastErr = null;
             for (let i = 0; i < maxRetries; i++) {
                 if (!isRunning) return null;
                 try {
                     const detail = await apiGet(file.id);
-                    if (detail && detail.web_content_link) return detail;
+                    if (detail && detail.web_content_link) return { ...file, ...detail };
                     if (detail && (detail.phase === "PHASE_TYPE_PENDING" || detail.phase === "PHASE_TYPE_RUNNING")) return null;
                     throw new Error("Link Empty");
                 } catch (e) {
@@ -28605,7 +30535,12 @@ UI.win.querySelector('#pk-down').onclick = async () => {
                     try {
                         const detail = await hydrateWithRetry(file);
                         if (detail) {
-                            readyFiles.push(detail);
+                            readyFiles.push({
+                                ...file,
+                                ...detail,
+                                _lineage: file._lineage || detail._lineage || [],
+                                _pc_download_parent_id: getPcDownloadParentId(detail) || file._pc_download_parent_id || ''
+                            });
                         }
                     } catch (e) {
                         console.error(`[Hydrate Failed] ${file.name}:`, e);
@@ -28617,18 +30552,49 @@ UI.win.querySelector('#pk-down').onclick = async () => {
             if (progressTask) progressTask.update(`${L.msg_batch_hydrating} ${readyFiles.length} / ${allFiles.length}`);
         }
 
+        if (!isRunning) throw new Error('StoppedByUser');
+
+        if (nasCfg.enabled) {
+            const nasResult = await sendNasDownloadBatches(readyFiles, { signal, progressTask });
+            if (nasResult.completedFiles.length > 0) {
+                markPcDownloadedItems(nasResult.completedFiles);
+                renderVisible();
+                renderTreePane();
+            }
+            if (nasResult.failedCount > 0) {
+                const detailLines = (nasResult.failedItems || []).slice(0, 5).map(item => {
+                    const name = item.name || '';
+                    const error = item.error || item.status || '';
+                    return `- ${name}${error ? `: ${error}` : ''}`;
+                });
+                const moreText = nasResult.failedItems && nasResult.failedItems.length > detailLines.length
+                    ? `\n... +${nasResult.failedItems.length - detailLines.length}`
+                    : '';
+                const detailText = detailLines.length ? `\n\n${detailLines.join('\n')}${moreText}` : '';
+                await showAlert(`${L.msg_nas_failed || 'NAS worker failed or only partially completed the job.'}\n${L.str_success}: ${nasResult.completedFiles.length}\n${L.str_failed}: ${nasResult.failedCount}${detailText}`, L.title_alert);
+            } else if (nasResult.completedFiles.length > 0) {
+                showToast((L.msg_nas_sent || 'Sent {n} files to NAS worker.').replace('{n}', nasResult.completedFiles.length));
+            }
+            return;
+        }
+
+        const launchedFiles = [];
         for (let i = 0; i < readyFiles.length; i++) {
             if (!isRunning) break;
             if (progressTask) progressTask.update(`${L.msg_down_progress} ${i + 1} / ${readyFiles.length}`);
 
-            const link = document.createElement('a');
-            link.href = readyFiles[i].web_content_link;
-            link.setAttribute('download', readyFiles[i].name);
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-
-            setTimeout(() => { if (link.parentNode) link.remove(); }, 10000);
+            if (isZeroByteFile(readyFiles[i])) {
+                downloadEmptyFile(readyFiles[i]);
+            } else {
+                const link = document.createElement('a');
+                link.href = getTransferDownloadUrl(readyFiles[i]);
+                link.setAttribute('download', readyFiles[i].name);
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                setTimeout(() => { if (link.parentNode) link.remove(); }, 10000);
+            }
+            launchedFiles.push(readyFiles[i]);
 
             if (i < readyFiles.length - 1) {
                 await sleep(2000);
@@ -28637,11 +30603,20 @@ UI.win.querySelector('#pk-down').onclick = async () => {
             }
         }
 
+        if (launchedFiles.length > 0 && markPcDownloadedItems(launchedFiles)) {
+            renderVisible();
+            renderTreePane();
+        }
+
         if (isRunning && readyFiles.length > 0) {
             showToast(L.msg_down_success.replace('{n}', readyFiles.length));
         }
     } catch (e) {
-        if (e.message !== 'StoppedByUser' && e.name !== 'AbortError') showAlert(`${L.str_error}: ${e.message}`);
+        if (e.message === 'StoppedByUser' || e.name === 'AbortError') {
+            if (nasDownloadActive) showToast(L.msg_nas_canceled || 'NAS download canceled.');
+        } else {
+            showAlert(`${L.str_error}: ${e.message}`);
+        }
     } finally {
         setLoad(false);
         isGUISensitive = false;
@@ -28881,7 +30856,7 @@ UI.win.querySelector('#pk-aria2').onclick = async () => {
             if (item.kind === 'drive#folder') {
                 rootNodes.push({...item, lineage: [{ id: item.id, name: item.name }], retryCount: 0});
             } else {
-                allFiles.push({ ...item, _lineage: [] });
+                allFiles.push({ ...item, _lineage: [], _pc_download_parent_id: getPcDownloadParentId(item) || (S.path[S.path.length - 1]?.id || '') });
             }
         }
     });
@@ -28905,6 +30880,7 @@ UI.win.querySelector('#pk-aria2').onclick = async () => {
                     return;
                 }
                 f._lineage = parent.lineage || [];
+                f._pc_download_parent_id = getPcDownloadParentId(f, parent);
                 allFiles.push(f);
             },
             onProgress: (st) => {
@@ -28939,14 +30915,14 @@ UI.win.querySelector('#pk-aria2').onclick = async () => {
         const activeTasks = new Set();
 
         const hydrateWithRetry = async (file, maxRetries = 3) => {
-            if (file.web_content_link) return file;
+            if (file.web_content_link) return await resolveDownloadDetailForTransfer(file);
             if (file.phase === "PHASE_TYPE_PENDING" || file.phase === "PHASE_TYPE_RUNNING" || file.trashed) return null;
             let lastErr = null;
             for (let i = 0; i < maxRetries; i++) {
                 if (!isRunning) return null;
                 try {
                     const detail = await apiGet(file.id);
-                    if (detail && detail.web_content_link) return detail;
+                    if (detail && detail.web_content_link) return { ...file, ...detail };
                     if (detail && (detail.phase === "PHASE_TYPE_PENDING" || detail.phase === "PHASE_TYPE_RUNNING")) return null;
                     throw new Error("Link Empty");
                 } catch (e) {
@@ -28964,8 +30940,10 @@ UI.win.querySelector('#pk-aria2').onclick = async () => {
                     try {
                         const detail = await hydrateWithRetry(file);
                         if (detail) {
-                            detail._lineage = file._lineage;
-                            readyFiles.push(detail);
+                            const merged = { ...file, ...detail };
+                            merged._lineage = file._lineage;
+                            merged._pc_download_parent_id = getPcDownloadParentId(merged) || file._pc_download_parent_id || '';
+                            readyFiles.push(merged);
                         }
                     } catch (e) {
                         console.error(`[Hydrate Failed] ${file.name}:`, e);
@@ -28984,6 +30962,15 @@ UI.win.querySelector('#pk-aria2').onclick = async () => {
         if (!isRunning) throw new Error('StoppedByUser');
 
         if (readyFiles.length > 0 && isRunning) {
+            const zeroByteFiles = readyFiles.filter(isZeroByteFile);
+            if (zeroByteFiles.length > 0) {
+                showToast(L.str_aria2_zero_byte_skipped || '0KB files skipped');
+                for (let i = readyFiles.length - 1; i >= 0; i--) {
+                    if (isZeroByteFile(readyFiles[i])) readyFiles.splice(i, 1);
+                }
+                if (!readyFiles.length) return;
+            }
+
             const BATCH_SIZE = 50;
             let successCount = 0;
             let rpcFatalError = false;
@@ -29003,7 +30990,7 @@ UI.win.querySelector('#pk-aria2').onclick = async () => {
                     return {
                         jsonrpc: '2.0', method: 'aria2.addUri',
                         id: `pk_${Date.now()}_${Math.random().toString(16).slice(2)}`,
-                        params: buildAriaRpcParams(ariaToken, [[f.web_content_link], {
+                        params: buildAriaRpcParams(ariaToken, [[getTransferDownloadUrl(f)], {
                             out: outPath,
                             header: [`User-Agent: ${navigator.userAgent}`, `Referer: https://mypikpak.com/`]
                         }])
@@ -29013,6 +31000,10 @@ UI.win.querySelector('#pk-aria2').onclick = async () => {
                 try {
                     await aria2RpcRequest(ariaUrl, payload, Math.max(10000, chunk.length * 800));
                     successCount += chunk.length;
+                    if (markPcDownloadedItems(chunk)) {
+                        renderVisible();
+                        renderTreePane();
+                    }
                 } catch (rpcErr) {
                     console.error("[RPC Batch Error]", rpcErr);
                     chunk.forEach(f => failedFiles.push(f.name + " " + L.str_aria2_rpc_err));
@@ -29094,7 +31085,8 @@ const executeBatchDelete = async (ids, options = {}) => {
         explicitItems = []
     } = options;
 
-    if (!ids || ids.length === 0) return;
+    if (!ids || ids.length === 0) return { ok: true, deletedCount: 0 };
+    let deleteResult = { ok: false, deletedCount: 0 };
 
     const tempItemLookup = new Map();
     if (S.itemMap) S.itemMap.forEach((v, k) => tempItemLookup.set(k, v));
@@ -29399,6 +31391,8 @@ const executeBatchDelete = async (ids, options = {}) => {
             setTimeout(() => updateQuotaUI(), 2000);
         }
 
+        deleteResult = { ok: true, deletedCount };
+
         if (!silent && !S.dupMode) {
             showToast(isTask ? L.msg_task_deleted : L.msg_del_items_done.replace('{n}', deletedCount));
         }
@@ -29425,11 +31419,37 @@ const executeBatchDelete = async (ids, options = {}) => {
 
         if (progressTask) progressTask.destroy();
     }
-};
 
+    return deleteResult;
+};
 if (UI.btnClearHistoryAll) {
     UI.btnClearHistoryAll.onclick = () => {
         clearAllPlayHistory();
+    };
+}
+
+if (UI.btnDelDownloaded) {
+    UI.btnDelDownloaded.onclick = async () => {
+        if (!isPcDownloadedBatchDeleteView()) return;
+
+        const candidates = getPcDownloadedDeleteCandidates();
+        if (candidates.length === 0) {
+            showToast(L.msg_del_downloaded_none, 'warning');
+            return;
+        }
+
+        const delRes = await showDeleteConfirm(L.warn_del_downloaded.replace('{n}', candidates.length));
+        if (!delRes.confirm) return;
+
+        const result = await executeBatchDelete(
+            candidates.map(item => item.id),
+            { hardDelete: delRes.hardDelete, explicitItems: candidates, silent: true }
+        );
+
+        if (result && result.ok) {
+            removePcDownloadMarksForDeletedItems(candidates);
+            showToast(L.msg_del_downloaded_done.replace('{n}', result.deletedCount || candidates.length));
+        }
     };
 }
 
@@ -29519,6 +31539,38 @@ UI.btnDel.onclick = async () => {
                 taskModal.querySelector('#del_task_confirm').click();
             }
         });
+        return;
+    }
+
+    if (S._treeContextActive && S._treeContextItem && selectedIds.length === 1) {
+        const item = S._treeContextItem;
+        const lowerName = String(item.name || '').toLowerCase().trim();
+        const isFolder = item.kind === 'drive#folder';
+        const blSet = S.blSet || new Set();
+        const blFolderSet = S.blFolderSet || new Set();
+
+        if (!S.trashMode && isSystemItem(item)) {
+            cleanupTreeContextSelection();
+            showAlert(L.msg_del_none);
+            return;
+        }
+
+        if (gmGet('pk_skip_bl_on_del', true) && (isFolder ? blFolderSet.has(lowerName) : blSet.has(lowerName))) {
+            cleanupTreeContextSelection();
+            showToast(L.msg_del_protected.replace('{n}', 1));
+            return;
+        }
+
+        const delRes = await showDeleteConfirm(L.warn_del.replace('{n}', 1));
+        if (!delRes.confirm) {
+            cleanupTreeContextSelection();
+            return;
+        }
+
+        cleanupTreeContextSelection();
+        await executeBatchDelete([item.id], { hardDelete: delRes.hardDelete });
+        removeTreeNodeFromState(item.id);
+        renderTreePane();
         return;
     }
 
@@ -31182,7 +33234,7 @@ const switchTab = (mode) => {
     if(UI.crumb) { UI.crumb.style.opacity = '1'; UI.crumb.style.display = 'flex'; }
     if(UI.cntFolderFirst) UI.cntFolderFirst.style.display = 'flex';
 
-    const stdBtns = [UI.btnNewFolder, UI.btnDel, UI.btnCopy, UI.btnCut, UI.btnPaste, UI.btnRename, UI.btnBulkRename, UI.btnPrune, UI.btnUnzip, UI.btnMigrate, UI.btnBlacklistManager];
+    const stdBtns = [UI.btnNewFolder, UI.btnDel, UI.btnDelDownloaded, UI.btnCopy, UI.btnCut, UI.btnPaste, UI.btnRename, UI.btnBulkRename, UI.btnPrune, UI.btnUnzip, UI.btnMigrate, UI.btnBlacklistManager];
     const shareBtns = [document.getElementById('pk-cancel-share')];
     const upBtns = [UI.btnUpPause, UI.btnUpStart, UI.btnUpDel, UI.btnUpClearAll];
     const upSep = document.getElementById('pk-up-sep');
@@ -31253,7 +33305,7 @@ const switchTab = (mode) => {
     else if (S.offlineMode) {
         UI.win.classList.remove('pk-mode-trash');
 
-        [UI.btnNewFolder, UI.btnCopy, UI.btnCut, UI.btnPaste, UI.btnRename, UI.btnBulkRename, UI.btnPrune, UI.btnUnzip, UI.btnMigrate].forEach(b => { if(b) b.style.display = 'none'; });
+        [UI.btnNewFolder, UI.btnDelDownloaded, UI.btnCopy, UI.btnCut, UI.btnPaste, UI.btnRename, UI.btnBulkRename, UI.btnPrune, UI.btnUnzip, UI.btnMigrate].forEach(b => { if(b) b.style.display = 'none'; });
 
         [UI.btnDel, UI.btnRefresh, UI.btnBlacklistManager].forEach(b => { if(b) b.style.display = 'inline-flex'; });
 
@@ -31823,6 +33875,481 @@ const showFolderSelector = (initialId, onConfirm, initialPath = null, fileFilter
     loadFolder(initialId || '', null, true);
 };
 
+const CLOUD_DUPLICATE_CHECK_MAX_SAMPLE = 8;
+const CLOUD_DUPLICATE_PREVIEW_TTL = 10 * 60 * 1000;
+const cloudDuplicatePreviewCache = new Map();
+let cloudDuplicateIndexPromise = null;
+
+const getCloudDuplicateTexts = () => {
+    const lang = getLang();
+    if (lang === 'ko') {
+        return {
+            title: 'PikPak 중복 추가 확인',
+            scanningCloud: 'PikPak 파일 인덱스 확인 중...',
+            scanUnavailable: 'PikPak 중복 확인을 완료하지 못해 기존 방식으로 추가를 계속합니다.',
+            existingConfirm: (n, sample) => `PikPak 클라우드에 이미 있는 것으로 보이는 항목 ${n}개를 찾았습니다.\n토렌트/마그넷의 파일명 또는 품번 기준으로 확인했습니다.\n\n${sample}\n\n그래도 다운로드 작업을 추가할까요?`,
+            skippedExisting: (n) => `PikPak에 이미 있는 것으로 보여 ${n}개 추가를 건너뛰었습니다.`,
+            taskExistsSkipped: '이미 등록된 작업이라 건너뛰었습니다.',
+            result: (s, k, f) => `생성 완료: ${s} 성공, ${k} 건너뜀, ${f} 실패`
+        };
+    }
+    if (lang === 'en') {
+        return {
+            title: 'PikPak Duplicate Check',
+            scanningCloud: 'Checking PikPak cloud index...',
+            scanUnavailable: 'Could not finish the PikPak duplicate check; continuing with the normal add flow.',
+            existingConfirm: (n, sample) => `Found ${n} item(s) that appear to already exist in PikPak cloud.\nThe check uses torrent/magnet filenames and catalog-code candidates.\n\n${sample}\n\nAdd the download task anyway?`,
+            skippedExisting: (n) => `Skipped ${n} item(s) that appear to already exist in PikPak.`,
+            taskExistsSkipped: 'Skipped an already registered task.',
+            result: (s, k, f) => `Created: ${s} succeeded, ${k} skipped, ${f} failed`
+        };
+    }
+    return {
+        title: 'PikPak 重复添加确认',
+        scanningCloud: '正在检查 PikPak 文件索引...',
+        scanUnavailable: '未能完成 PikPak 重复检查，将继续按原流程添加。',
+        existingConfirm: (n, sample) => `在 PikPak 云盘中找到 ${n} 个疑似已存在的项目。\n检查基于 Torrent/磁链文件名和番号候选。\n\n${sample}\n\n仍然创建下载任务吗？`,
+        skippedExisting: (n) => `疑似已在 PikPak 中存在，已跳过 ${n} 个项目。`,
+        taskExistsSkipped: '任务已存在，已跳过。',
+        result: (s, k, f) => `创建完成：${s} 成功，${k} 跳过，${f} 失败`
+    };
+};
+
+const normalizeCloudDuplicateText = (value) => {
+    let text = String(value || '');
+    try { text = text.normalize('NFKC'); } catch (e) {}
+    return text
+        .replace(/[\u2010-\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-')
+        .replace(/[._\s]+/g, ' ')
+        .toUpperCase();
+};
+
+const getCloudDuplicateBaseName = (name) => {
+    const raw = String(name || '').replace(/[?#].*$/, '').trim();
+    if (!raw) return '';
+    const leaf = raw.split(/[\\/]/).pop() || raw;
+    return leaf.replace(/\.(?:torrent|mp4|mkv|avi|wmv|mov|m4v|ts|webm|iso|zip|rar|7z|srt|ass|ssa)$/i, '');
+};
+
+const isCloudDuplicateMediaLikeName = (name) => {
+    const leaf = String(name || '').split(/[\\/]/).pop() || '';
+    if (!leaf || /^https?:\/\//i.test(String(name || ''))) return false;
+    if (/\.(?:jpe?g|png|webp|gif|bmp|avif)(?:[?#].*)?$/i.test(leaf)) return false;
+    return /[A-Za-z0-9가-힣ぁ-んァ-ン一-龥]/.test(leaf);
+};
+
+const isCloudDuplicateDomainFragment = (text, start, end) => {
+    const after = text.slice(end, end + 12);
+    if (/^\s*(COM|NET|ORG|CC|TV|ME|APP|SITE|INFO|XYZ|TO|CO|KR|JP|CLUB|LIVE)\b/i.test(after)) return true;
+    const before = text.slice(Math.max(0, start - 16), start);
+    return /(?:^|[^A-Z0-9])(?:WWW|HTTP|HTTPS)\s*$/i.test(before);
+};
+
+const canonicalizeCloudDuplicateCode = (prefix, number) => {
+    const p = String(prefix || '').replace(/[^A-Z0-9]/gi, '').toUpperCase();
+    const n = String(number || '').replace(/\D/g, '');
+    if (!p || !n) return null;
+    return {
+        canonical: `${p}-${n}`,
+        compact: `${p}${n}`
+    };
+};
+
+const extractCloudDuplicateCatalogCodes = (name) => {
+    const text = normalizeCloudDuplicateText(getCloudDuplicateBaseName(name));
+    const out = new Map();
+    const add = (code) => {
+        if (!code || !code.canonical) return;
+        out.set(code.canonical, code);
+    };
+
+    let m;
+    const fc2Re = /(?:^|[^A-Z0-9])FC2\s*[- ]?\s*(?:PPV\s*[- ]?\s*)?(\d{5,9})(?=$|[^A-Z0-9])/g;
+    while ((m = fc2Re.exec(text)) !== null) {
+        const n = m[1];
+        add({ canonical: `FC2-PPV-${n}`, compact: `FC2PPV${n}` });
+    }
+
+    const codeRe = /(?:^|[^A-Z0-9])((?:\d{2,5})?[A-Z]{2,12})\s*[- ]?\s*(\d{2,7})(?=$|[^A-Z0-9])/g;
+    while ((m = codeRe.exec(text)) !== null) {
+        const rawStart = m.index + m[0].search(/[A-Z0-9]/);
+        const rawEnd = codeRe.lastIndex;
+        const prefix = m[1];
+        const num = m[2];
+        if (/^(FC2|HTTP|HTTPS|WWW|COM|NET|ORG)$/.test(prefix)) continue;
+        if (prefix === 'PPV' && /FC2\s*[- ]?\s*$/.test(text.slice(Math.max(0, rawStart - 12), rawStart))) continue;
+        if (isCloudDuplicateDomainFragment(text, rawStart, rawEnd)) continue;
+        add(canonicalizeCloudDuplicateCode(prefix, num));
+    }
+
+    return Array.from(out.values());
+};
+
+const getCloudDuplicateFullKey = (name) => {
+    const base = normalizeCloudDuplicateText(getCloudDuplicateBaseName(name));
+    const key = base.replace(/[^A-Z0-9가-힣ぁ-んァ-ン一-龥]+/g, '');
+    return key.length >= 8 ? key : '';
+};
+
+const getCloudDuplicateRecord = (name) => {
+    const baseName = getCloudDuplicateBaseName(name);
+    if (!baseName || !isCloudDuplicateMediaLikeName(baseName)) return null;
+    const codes = extractCloudDuplicateCatalogCodes(baseName);
+    const fullKey = getCloudDuplicateFullKey(baseName);
+    if (!codes.length && !fullKey) return null;
+    return { name: baseName, codes, codeSet: new Set(codes.map(c => c.canonical)), fullKey };
+};
+
+const addCloudDuplicateNameCandidate = (names, seen, value) => {
+    const raw = String(value || '').trim();
+    if (!raw || raw.length > 500 || /^https?:\/\//i.test(raw)) return;
+    let decoded = raw;
+    try { decoded = decodeURIComponent(raw.replace(/\+/g, '%20')); } catch (e) {}
+    const leaf = decoded.split(/[\\/]/).pop() || decoded;
+    if (!isCloudDuplicateMediaLikeName(leaf)) return;
+    const key = normalizeCloudDuplicateText(getCloudDuplicateBaseName(leaf));
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    names.push(leaf);
+};
+
+const getMagnetDisplayName = (link) => {
+    const match = String(link || '').match(/[?&]dn=([^&]+)/i);
+    if (!match) return '';
+    try { return decodeURIComponent(match[1].replace(/\+/g, '%20')); }
+    catch (e) { return match[1]; }
+};
+
+const normalizeCloudDuplicateMagnetHash = (link) => {
+    const match = String(link || '').match(/urn:btih:([^&]+)/i);
+    return match ? match[1].toUpperCase() : String(link || '').trim().toLowerCase();
+};
+
+const collectPreviewDuplicateNames = (data, names, seen) => {
+    const visit = (value, depth = 0) => {
+        if (!value || depth > 5) return;
+        if (typeof value === 'string') {
+            addCloudDuplicateNameCandidate(names, seen, value);
+            return;
+        }
+        if (Array.isArray(value)) {
+            value.forEach(item => visit(item, depth + 1));
+            return;
+        }
+        if (typeof value !== 'object') return;
+
+        ['name', 'filename', 'file_name', 'title', 'path'].forEach(key => {
+            if (Object.prototype.hasOwnProperty.call(value, key)) {
+                addCloudDuplicateNameCandidate(names, seen, value[key]);
+            }
+        });
+        ['files', 'file_list', 'list', 'children', 'contents'].forEach(key => {
+            if (Array.isArray(value[key])) visit(value[key], depth + 1);
+        });
+    };
+    visit(data);
+};
+
+const requestCloudDuplicateMagnetPreview = (link) => {
+    return new Promise((resolve) => {
+        const hash = normalizeCloudDuplicateMagnetHash(link);
+        const cached = cloudDuplicatePreviewCache.get(hash);
+        if (cached && Date.now() - cached.at < CLOUD_DUPLICATE_PREVIEW_TTL) {
+            resolve(cached.data);
+            return;
+        }
+
+        const finish = (data) => {
+            cloudDuplicatePreviewCache.set(hash, { at: Date.now(), data });
+            resolve(data);
+        };
+
+        const url = `${CONF.magnetPreviewApi}?url=${encodeURIComponent(link)}`;
+        const handleData = (data) => finish(data && typeof data === 'object' ? data : null);
+        const handleFail = () => finish(null);
+
+        if (typeof GM_xmlhttpRequest === 'function') {
+            GM_xmlhttpRequest({
+                method: 'GET',
+                url,
+                responseType: 'json',
+                timeout: Math.min(CONF.magnetPreviewTimeout || 5000, 4500),
+                onload: (res) => {
+                    if (res.status < 200 || res.status >= 300) {
+                        handleFail();
+                        return;
+                    }
+                    try {
+                        handleData(res.response && typeof res.response === 'object' ? res.response : JSON.parse(res.responseText || '{}'));
+                    } catch (e) {
+                        handleFail();
+                    }
+                },
+                onerror: handleFail,
+                ontimeout: handleFail
+            });
+            return;
+        }
+
+        fetch(url, { cache: 'no-store' })
+            .then(res => res.ok ? res.json() : null)
+            .then(handleData, handleFail);
+    });
+};
+
+const collectCloudDuplicateCandidateNames = async (sources, options = {}) => {
+    const names = [];
+    const seen = new Set();
+    const list = Array.isArray(sources) ? sources : [sources];
+
+    for (const source of list) {
+        if (!source) continue;
+        if (typeof source === 'string') {
+            const displayName = getMagnetDisplayName(source);
+            if (displayName) addCloudDuplicateNameCandidate(names, seen, displayName);
+            else if (!/^magnet:\?/i.test(source)) addCloudDuplicateNameCandidate(names, seen, source);
+            if (options.usePreview && /^magnet:\?/i.test(source)) {
+                const previewData = await requestCloudDuplicateMagnetPreview(source);
+                if (previewData) collectPreviewDuplicateNames(previewData, names, seen);
+            }
+            continue;
+        }
+
+        addCloudDuplicateNameCandidate(names, seen, source.name);
+        addCloudDuplicateNameCandidate(names, seen, source.fileName);
+        addCloudDuplicateNameCandidate(names, seen, source.title);
+
+        const link = source.url || source.link || source.magnet || '';
+        if (link) {
+            const displayName = getMagnetDisplayName(link);
+            if (displayName) addCloudDuplicateNameCandidate(names, seen, displayName);
+            else if (!/^magnet:\?/i.test(link)) addCloudDuplicateNameCandidate(names, seen, link);
+        }
+
+        if (source.previewData) collectPreviewDuplicateNames(source.previewData, names, seen);
+        if (options.usePreview && /^magnet:\?/i.test(link)) {
+            const previewData = await requestCloudDuplicateMagnetPreview(link);
+            if (previewData) collectPreviewDuplicateNames(previewData, names, seen);
+        }
+    }
+
+    return names;
+};
+
+const normalizeCloudCacheItems = (raw) => {
+    if (!raw) return null;
+    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw.items)) return raw.items;
+    return null;
+};
+
+const isCloudDuplicateCacheKey = (key) => {
+    const k = String(key || '');
+    if (!k || k === 'root') return true;
+    if (k === 'offline_root' || k === 'history_root' || k === 'recent_root' || k === 'root_trashed') return false;
+    if (k.endsWith('_session') || k.startsWith('__')) return false;
+    return true;
+};
+
+const getReachableCloudDuplicateCacheKeys = () => {
+    const reachable = new Set();
+    const queue = [];
+    const addKey = (key) => {
+        const normalized = key || '';
+        if (!isCloudDuplicateCacheKey(normalized) || reachable.has(normalized)) return;
+        if (typeof globalCache !== 'undefined' && !globalCache.has(normalized)) return;
+        reachable.add(normalized);
+        queue.push(normalized);
+    };
+
+    addKey('');
+    addKey('root');
+
+    while (queue.length > 0) {
+        const key = queue.shift();
+        const items = normalizeCloudCacheItems(globalCache.get(key));
+        if (!items) continue;
+        for (const item of items) {
+            if (item && item.kind === 'drive#folder' && item.id) {
+                addKey(item.id);
+            }
+        }
+    }
+
+    return reachable;
+};
+
+const collectPikPakCloudDuplicateItems = () => {
+    const out = [];
+    const seen = new Set();
+    const push = (item, parentId = '') => {
+        if (!item || !item.id || seen.has(item.id) || item.trashed || item.isHeader) return;
+        if (item.kind && item.kind === 'drive#task') return;
+        seen.add(item.id);
+        out.push({ item, parentId: parentId || item.parent_id || '' });
+    };
+
+    if (typeof globalCache !== 'undefined') {
+        const reachableKeys = getReachableCloudDuplicateCacheKeys();
+        for (const [key, raw] of globalCache.entries()) {
+            if (!isCloudDuplicateCacheKey(key)) continue;
+            if (reachableKeys.size > 0 && !reachableKeys.has(key || '')) continue;
+            const items = normalizeCloudCacheItems(raw);
+            if (!items) continue;
+            items.forEach(item => push(item, key === 'root' ? '' : key));
+        }
+    }
+
+    if (S && S.itemMap) {
+        S.itemMap.forEach(item => push(item, item.parent_id || ''));
+    }
+
+    return out;
+};
+
+const getCloudDuplicateItemPath = (item, parentId) => {
+    const homeText = L.btn_nav_home || 'Home';
+    let lineage = Array.isArray(item._lineage) ? item._lineage : null;
+    if (!lineage && typeof globalLineageMap !== 'undefined') {
+        lineage = globalLineageMap.get(parentId || item.parent_id || '') || null;
+    }
+    const parts = Array.isArray(lineage) ? lineage.map(p => p && p.name).filter(Boolean) : [];
+    const clean = parts.filter(n => n !== 'Root' && n !== L.str_root_dir_cn);
+    if (clean[0] !== homeText) clean.unshift(homeText);
+    clean.push(item.name || '');
+    return clean.filter(Boolean).join('/');
+};
+
+const ensurePikPakCloudDuplicateIndex = async () => {
+    if (isGlobalIndexReady && !globalNeedsSync) return true;
+    if (S && S.scanning) return false;
+    if (cloudDuplicateIndexPromise) return cloudDuplicateIndexPromise;
+
+    const TXT = getCloudDuplicateTexts();
+    cloudDuplicateIndexPromise = (async () => {
+        const wasSensitive = isGUISensitive;
+        isGUISensitive = true;
+        setLoad(true);
+        updateLoadTxt(TXT.scanningCloud);
+        try {
+            const preferFresh = !!globalNeedsSync;
+            await coreRecursiveEngine([{ id: '', name: 'Root', lineage: [], retryCount: 0 }], {
+                preferFresh,
+                onFolder: (folder, filesInFolder) => {
+                    indexParents(folder.id, folder.name, filesInFolder);
+                    if (typeof globalLineageMap !== 'undefined') {
+                        globalLineageMap.set(folder.id, folder.lineage || []);
+                    }
+                },
+                onProgress: (st) => {
+                    updateLoadTxt(`${TXT.scanningCloud}\n${L.str_folders}: ${st.folders} | ${L.str_files}: ${st.files}`);
+                }
+            });
+            isGlobalIndexReady = true;
+            globalNeedsSync = false;
+            return true;
+        } catch (e) {
+            console.warn('[PikPakCloudDuplicateCheck] scan skipped:', e);
+            showToast(TXT.scanUnavailable, 'warning', 3000);
+            return false;
+        } finally {
+            isGUISensitive = wasSensitive;
+            setLoad(false);
+            cloudDuplicateIndexPromise = null;
+        }
+    })();
+
+    return cloudDuplicateIndexPromise;
+};
+
+const findPikPakCloudDuplicatesForSources = async (sources, options = {}) => {
+    const candidateNames = await collectCloudDuplicateCandidateNames(sources, options);
+    const candidateRecords = candidateNames.map(getCloudDuplicateRecord).filter(Boolean);
+    if (!candidateRecords.length) return { matches: [], candidateCount: 0 };
+
+    await ensurePikPakCloudDuplicateIndex();
+
+    const candidateCodes = new Set();
+    const candidateFullKeys = new Set();
+    candidateRecords.forEach(record => {
+        record.codes.forEach(code => candidateCodes.add(code.canonical));
+        if (record.fullKey) candidateFullKeys.add(record.fullKey);
+    });
+
+    const matches = [];
+    const seen = new Set();
+    for (const entry of collectPikPakCloudDuplicateItems()) {
+        const item = entry.item;
+        const record = getCloudDuplicateRecord(item.name);
+        if (!record) continue;
+
+        let reason = '';
+        for (const code of record.codes) {
+            if (candidateCodes.has(code.canonical)) {
+                reason = code.canonical;
+                break;
+            }
+        }
+        if (!reason && record.fullKey && candidateFullKeys.has(record.fullKey)) {
+            reason = record.name;
+        }
+        if (!reason) continue;
+
+        const key = `${item.id}|${reason}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        matches.push({
+            item,
+            reason,
+            path: getCloudDuplicateItemPath(item, entry.parentId)
+        });
+        if (matches.length >= 50) break;
+    }
+
+    return { matches, candidateCount: candidateRecords.length };
+};
+
+const formatCloudDuplicateSample = (matches, limit = CLOUD_DUPLICATE_CHECK_MAX_SAMPLE) => {
+    const lines = matches.slice(0, limit).map(match => `- ${match.reason}: ${match.path || (match.item && match.item.name) || ''}`);
+    if (matches.length > limit) lines.push(`... +${matches.length - limit}`);
+    return lines.join('\n');
+};
+
+const checkPikPakCloudDuplicateBeforeAdd = async (sources, options = {}) => {
+    const result = await findPikPakCloudDuplicatesForSources(sources, options);
+    if (!result.matches.length) return { proceed: true, skipped: false, matches: [] };
+
+    const TXT = getCloudDuplicateTexts();
+    if (options.silent) {
+        showToast(TXT.skippedExisting(result.matches.length), 'warning', 3200);
+        return { proceed: false, skipped: true, matches: result.matches };
+    }
+
+    const sample = formatCloudDuplicateSample(result.matches);
+    const proceed = await showConfirm(TXT.existingConfirm(result.matches.length, sample), TXT.title);
+    return { proceed, skipped: !proceed, matches: result.matches };
+};
+
+const isOfflineTaskExistsError = (e) => {
+    const msg = String((e && e.message) || e || '');
+    const taskExistsText = String((getStrings() && getStrings().err_task_exists) || L.err_task_exists || '');
+    return (taskExistsText && msg.includes(taskExistsText)) ||
+        /task\s+exists|task\s+already\s+exists|already\s+exists|任务已存在|작업.*이미|이미.*작업/i.test(msg);
+};
+
+const showCloudTaskOutcomeToast = (successCount, failCount, skippedCount = 0) => {
+    if (skippedCount > 0) {
+        const TXT = getCloudDuplicateTexts();
+        showToast(TXT.result(successCount, skippedCount, failCount), failCount > 0 ? 'warning' : 'warning');
+        return;
+    }
+    if (failCount > 0) {
+        showToast(L.msg_cloud_task_finish.replace('{s}', successCount).replace('{f}', failCount), 'warning');
+    } else {
+        showToast(L.msg_cloud_task_success.replace('{n}', successCount));
+    }
+};
+
 const initClipboardMagnetFocusWatcher = () => {
     if (window.__pkClipboardMagnetFocusWatcherBound) return;
     window.__pkClipboardMagnetFocusWatcherBound = true;
@@ -31868,14 +34395,22 @@ const initClipboardMagnetFocusWatcher = () => {
         return { id: isHomeSubDir ? curId : '', name: isHomeSubDir ? (curFolder.name || L.lbl_default_folder) : L.lbl_default_folder, path: isHomeSubDir ? S.path.filter(p => !p.id.startsWith('virtual_')) : null };
     };
 
-    const createMagnetCloudTasks = async (links, targetId) => {
+    const createMagnetCloudTasks = async (links, targetId, duplicateSources = null) => {
         const progressTask = FloatBarManager.create(L.msg_creating_cloud_task);
         let successCount = 0;
         let failCount = 0;
+        let skippedCount = 0;
 
         for (let i = 0; i < links.length; i++) {
             progressTask.update(L.str_creating_task_n.replace('{n}', i + 1).replace('{t}', links.length));
             try {
+                const duplicateSource = duplicateSources && duplicateSources[i] ? duplicateSources[i] : links[i];
+                const duplicateCheck = await checkPikPakCloudDuplicateBeforeAdd([duplicateSource], { usePreview: !duplicateSource.previewData });
+                if (!duplicateCheck.proceed) {
+                    skippedCount++;
+                    continue;
+                }
+
                 let retry = 0;
                 let created = false;
                 while (retry < 3) {
@@ -31886,6 +34421,11 @@ const initClipboardMagnetFocusWatcher = () => {
                         if (typeof globalNeedsSync !== 'undefined') globalNeedsSync = true;
                         break;
                     } catch (reqErr) {
+                        if (isOfflineTaskExistsError(reqErr)) {
+                            skippedCount++;
+                            created = true;
+                            break;
+                        }
                         const isRateLimited = String((reqErr && (reqErr.message || reqErr.status || reqErr.code)) || '').includes('429');
                         if (isRateLimited) {
                             retry++;
@@ -31906,11 +34446,7 @@ const initClipboardMagnetFocusWatcher = () => {
 
         progressTask.destroy();
 
-        if (failCount > 0) {
-            showToast(L.msg_cloud_task_finish.replace('{s}', successCount).replace('{f}', failCount), 'warning');
-        } else {
-            showToast(L.msg_cloud_task_success.replace('{n}', successCount));
-        }
+        showCloudTaskOutcomeToast(successCount, failCount, skippedCount);
 
         setTimeout(() => updateQuotaUI(), 1000);
 
@@ -32208,7 +34744,7 @@ const initClipboardMagnetFocusWatcher = () => {
             m.querySelector('#pk_magnet_cancel').onclick = close;
             m.querySelector('#pk_magnet_continue').onclick = () => {
                 m.remove();
-                resolve({ confirm: true, targetId: saveTarget.id, targetName: saveTarget.name });
+                resolve({ confirm: true, targetId: saveTarget.id, targetName: saveTarget.name, previewData: data });
             };
         });
     };
@@ -32255,7 +34791,7 @@ const initClipboardMagnetFocusWatcher = () => {
                 }
 
                 try {
-                    await createMagnetCloudTasks([task.link], result.targetId || '');
+                    await createMagnetCloudTasks([task.link], result.targetId || '', [{ url: task.link, previewData: result.previewData }]);
                 } catch (e) {
                     console.error('Magnet cloud task failed:', e);
                     if (L.str_action_failed) showToast(L.str_action_failed, 'error');
@@ -32351,6 +34887,136 @@ const initClipboardMagnetFocusWatcher = () => {
 };
 
 initClipboardMagnetFocusWatcher();
+
+const normalizePkExternalAddMagnets = (payload) => {
+    const candidates = [];
+    const pushCandidate = (value) => {
+        const text = String(value || '').trim();
+        if (text) candidates.push(text);
+    };
+
+    if (typeof payload === 'string') pushCandidate(payload);
+    if (payload && typeof payload === 'object') {
+        if (Array.isArray(payload)) payload.forEach(pushCandidate);
+        else {
+            pushCandidate(payload.url);
+            pushCandidate(payload.link);
+            pushCandidate(payload.text);
+            if (Array.isArray(payload.items)) {
+                payload.items.forEach(item => {
+                    if (typeof item === 'string') {
+                        pushCandidate(item);
+                    } else if (item && typeof item === 'object') {
+                        pushCandidate(item.url);
+                        pushCandidate(item.link);
+                        pushCandidate(item.magnet);
+                    }
+                });
+            }
+        }
+    }
+
+    const unique = new Map();
+    candidates.forEach(value => {
+        parseCloudLinks(value, true).forEach(link => {
+            if (!/^magnet:\?/i.test(link)) return;
+            const hashMatch = link.match(/[?&]xt=urn:btih:([^&]+)/i);
+            const key = hashMatch ? hashMatch[1].toUpperCase() : link;
+            if (!unique.has(key)) unique.set(key, link);
+        });
+    });
+
+    return Array.from(unique.values());
+};
+
+const submitPkExternalAddPayload = async (payload) => {
+    const finishExternalAdd = (successCount, failCount, delayMs, skippedCount = 0) => {
+        try {
+            if (window.opener && typeof window.opener.postMessage === 'function') {
+                window.opener.postMessage({
+                    type: 'pk-external-add-result',
+                    successCount,
+                    failCount,
+                    skippedCount
+                }, '*');
+            }
+        } catch (e) {}
+
+        if (payload && payload.autoClose) {
+            setTimeout(() => {
+                try { window.close(); } catch (e) {}
+            }, delayMs);
+        }
+    };
+
+    const links = normalizePkExternalAddMagnets(payload);
+    if (links.length === 0) {
+        showToast(L.err_invalid_links || 'No valid magnet links found.', 'error');
+        finishExternalAdd(0, 1, 5000);
+        return;
+    }
+
+    const isAuthReady = await waitForAuth(8000);
+    if (!isAuthReady) {
+        showToast(L.str_error || 'PikPak auth is not ready.', 'error');
+        finishExternalAdd(0, links.length, 5000);
+        return;
+    }
+
+    const progressTask = FloatBarManager.create(L.msg_creating_cloud_task || L.str_processing || 'Creating cloud task...');
+    let successCount = 0;
+    let failCount = 0;
+    let skippedCount = 0;
+
+    for (let i = 0; i < links.length; i++) {
+        if (progressTask && typeof progressTask.update === 'function') {
+            const text = L.str_creating_task_n
+                ? L.str_creating_task_n.replace('{n}', i + 1).replace('{t}', links.length)
+                : `${i + 1}/${links.length}`;
+            progressTask.update(text);
+        }
+
+        try {
+            const duplicateCheck = await checkPikPakCloudDuplicateBeforeAdd([{ url: links[i] }], { usePreview: true, silent: true });
+            if (!duplicateCheck.proceed) {
+                skippedCount++;
+                await sleep(250);
+                continue;
+            }
+
+            await apiAddOfflineTask(links[i], '', {});
+            successCount++;
+            if (typeof globalNeedsSync !== 'undefined') globalNeedsSync = true;
+        } catch (e) {
+            if (isOfflineTaskExistsError(e)) {
+                skippedCount++;
+            } else {
+                console.error('[PikPak External Add] Task create failed:', e, links[i]);
+                failCount++;
+            }
+        }
+
+        await sleep(250);
+    }
+
+    if (progressTask) progressTask.destroy();
+
+    showCloudTaskOutcomeToast(successCount, failCount, skippedCount);
+
+    setTimeout(() => updateQuotaUI(), 1000);
+    let refreshTriggered = false;
+    if (S.offlineMode || S.path.length === 1) {
+        load(false, true);
+    } else if (window.pkSmartRefreshTrigger) {
+        window.pkSmartRefreshTrigger(true, { burst: true, reason: 'external-add' });
+        refreshTriggered = true;
+    }
+    if (successCount > 0 && !refreshTriggered && window.pkSmartRefreshTrigger) {
+        setTimeout(() => window.pkSmartRefreshTrigger(true, { burst: true, reason: 'external-add-followup' }), 1200);
+    }
+
+    finishExternalAdd(successCount, failCount, failCount > 0 ? 5000 : 1400, skippedCount);
+};
 
 if (btnCloud) {
     btnCloud.onclick = () => {
@@ -32558,6 +35224,7 @@ if (btnCloud) {
             const fb = FloatBarManager.create(L.str_parsing_torrent);
             let successCount = 0;
             let failCount = 0;
+            let skippedCount = 0;
 
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
@@ -32627,6 +35294,12 @@ if (btnCloud) {
 
                     fb.update(`${L.msg_creating_cloud_task} (${i + 1}/${files.length})`);
 
+                    const duplicateCheck = await checkPikPakCloudDuplicateBeforeAdd([{ url: magnetLink, name: file.name }]);
+                    if (!duplicateCheck.proceed) {
+                        skippedCount++;
+                        continue;
+                    }
+
                     let retry = 0;
                     while (retry < 3) {
                         try {
@@ -32634,6 +35307,10 @@ if (btnCloud) {
                             successCount++;
                             break;
                         } catch (reqErr) {
+                            if (isOfflineTaskExistsError(reqErr)) {
+                                skippedCount++;
+                                break;
+                            }
                             if (reqErr.message && reqErr.message.includes('429')) {
                                 retry++;
                                 await sleep(2000 * retry);
@@ -32650,20 +35327,21 @@ if (btnCloud) {
 
             fb.destroy();
 
-            if (failCount > 0) {
-                showToast(L.msg_cloud_task_finish.replace('{s}', successCount).replace('{f}', failCount), 'warning');
-            } else if (successCount > 0) {
-                showToast(L.msg_cloud_task_success.replace('{n}', successCount));
-            }
+            showCloudTaskOutcomeToast(successCount, failCount, skippedCount);
 
             if (successCount > 0) {
                 if (typeof globalNeedsSync !== 'undefined') globalNeedsSync = true;
                 setTimeout(() => updateQuotaUI(), 1000);
                 const curPathId = S.path[S.path.length - 1].id || '';
+                let refreshTriggered = false;
                 if (S.offlineMode || (saveToId && curPathId === saveToId)) {
                     load(false, true);
                 } else if (!saveToId && S.path.length === 1 && window.pkSmartRefreshTrigger) {
-                        window.pkSmartRefreshTrigger(true);
+                    window.pkSmartRefreshTrigger(true, { burst: true, reason: 'torrent-add' });
+                    refreshTriggered = true;
+                }
+                if (!refreshTriggered && window.pkSmartRefreshTrigger) {
+                    setTimeout(() => window.pkSmartRefreshTrigger(true, { burst: true, reason: 'torrent-add-followup' }), 1200);
                 }
             }
         };
@@ -32704,6 +35382,7 @@ if (btnCloud) {
 
             let successCount = 0;
             let failCount = 0;
+            let skippedCount = 0;
 
             const processQueue =[
                 ...directLinks.map(u => ({ url: u, isSnap: false })),
@@ -32718,6 +35397,15 @@ if (btnCloud) {
                     const pid = (item.isSnap && snapshotParams) ? snapshotParams.targetId : saveToId;
                     const extras = item.isSnap ? { save_as: 'snapshot' } : {};
 
+                    if (!item.isSnap && /^magnet:\?/i.test(item.url)) {
+                        const duplicateCheck = await checkPikPakCloudDuplicateBeforeAdd([{ url: item.url }], { usePreview: true });
+                        if (!duplicateCheck.proceed) {
+                            skippedCount++;
+                            await sleep(300);
+                            continue;
+                        }
+                    }
+
                     let retry = 0;
                     while (retry < 3) {
                         try {
@@ -32726,6 +35414,10 @@ if (btnCloud) {
                             if (typeof globalNeedsSync !== 'undefined') globalNeedsSync = true;
                             break;
                         } catch (reqErr) {
+                            if (isOfflineTaskExistsError(reqErr)) {
+                                skippedCount++;
+                                break;
+                            }
                             if (reqErr.message && reqErr.message.includes('429')) {
                                 retry++;
                                 await sleep(2000 * retry);
@@ -32743,19 +35435,22 @@ if (btnCloud) {
 
             progressTask.destroy();
 
-            if (failCount > 0) {
-                showToast(L.msg_cloud_task_finish.replace('{s}', successCount).replace('{f}', failCount), 'warning');
-            } else {
-                showToast(L.msg_cloud_task_success.replace('{n}', successCount));
-            }
+            showCloudTaskOutcomeToast(successCount, failCount, skippedCount);
 
             setTimeout(() => updateQuotaUI(), 1000);
 
             const curPathId = S.path[S.path.length - 1].id || '';
+            let refreshTriggered = false;
             if (S.offlineMode || (saveToId && curPathId === saveToId)) {
                 load(false, true);
             } else if (!saveToId && S.path.length === 1) {
-                if(window.pkSmartRefreshTrigger) window.pkSmartRefreshTrigger(true);
+                if(window.pkSmartRefreshTrigger) {
+                    window.pkSmartRefreshTrigger(true, { burst: true, reason: 'cloud-add' });
+                    refreshTriggered = true;
+                }
+            }
+            if (successCount > 0 && !refreshTriggered && window.pkSmartRefreshTrigger) {
+                setTimeout(() => window.pkSmartRefreshTrigger(true, { burst: true, reason: 'cloud-add-followup' }), 1200);
             }
         };
     };
@@ -33030,6 +35725,16 @@ const openSettingsModal = () => {
     const curVideoLoadProgressCache = shouldLoadVideoProgressCache();
     const curAriaUrl = gmGet('pk_aria2_url', '');
     const curAriaToken = gmGet('pk_aria2_token', '');
+    const curNasEnabled = isTruthySetting(gmGet('pk_nas_enabled', false));
+    const curNasUrl = gmGet('pk_nas_worker_url', '');
+    const curNasToken = gmGet('pk_nas_worker_token', '');
+    const curNasBatchSize = clampNasBatchSize(gmGet('pk_nas_batch_size', '25'));
+    const curNasConcurrency = clampNasConcurrency(gmGet('pk_nas_concurrency', '2'));
+    const curNasSegments = clampNasSegments(gmGet('pk_nas_segments', '4'));
+    const curDownloadAccelEnable = isTruthySetting(gmGet('pk_download_accel_enable', CONF.downloadAccelEnable));
+    const curDownloadAccelDomain = gmGet('pk_download_accel_domain', CONF.downloadAccelDomain);
+    const curDownloadAccelMode = normalizeDownloadAccelMode(gmGet('pk_download_accel_mode', CONF.downloadAccelMode));
+    const curDownloadAccelQueryParam = normalizeDownloadAccelQueryParam(gmGet('pk_download_accel_query_param', CONF.downloadAccelQueryParam));
     const curBlur = gmGet('pk_blur_thumb', false);
     const curBlurScope = gmGet('pk_blur_scope', curBlur ? 'list' : 'off');
     const curHideButtonText = gmGet('pk_hide_button_text', false);
@@ -33037,6 +35742,7 @@ const openSettingsModal = () => {
     let selectedLang = curLang;
     let selectedEngine = curEngine;
     let selectedDefaultVideoQuality = curDefaultVideoQuality;
+    let selectedDownloadAccelMode = curDownloadAccelMode;
 
     let totalStorageBytes = 0;
     const keys = typeof GM_listValues !== 'undefined' ? GM_listValues() : Object.keys(localStorage);
@@ -33302,6 +36008,39 @@ const openSettingsModal = () => {
                         </div>
                     </div>
 
+                    <div id="pk_download_accel_group" style="position:relative; padding:25px 15px 15px 15px; border:2px solid var(--pk-bd); border-radius:8px; transition:border-color 0.2s; display:flex; flex-direction:column; gap:14px;" onmouseover="this.style.borderColor='var(--pk-pri)'" onmouseout="this.style.borderColor='var(--pk-bd)'">
+                        <div class="pk-select-label">${L.label_download_accel}</div>
+                        <label for="set_download_accel_enable"
+                                style="display:flex; align-items:center; justify-content:space-between; min-height:38px; gap:12px; cursor:pointer; color:var(--pk-fg);">
+                            <span style="font-size:13px; line-height:1.45; user-select:none;">${L.desc_download_accel}</span>
+                            <input type="checkbox" id="set_download_accel_enable" ${curDownloadAccelEnable ? 'checked' : ''} style="width:18px; height:18px; accent-color:var(--pk-pri); cursor:pointer; flex-shrink:0;">
+                        </label>
+                        <div style="position:relative;">
+                            <input type="text" id="set_download_accel_domain" value="${esc(curDownloadAccelDomain)}" placeholder="${L.ph_download_accel_domain || 'https://accelerator.example/download'}"
+                                    autocomplete="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly');"
+                                    oninput="this.style.borderColor = this.value.trim() ? 'var(--pk-pri)' : 'var(--pk-bd)'"
+                                    style="${inputStyle} border-color:${curDownloadAccelDomain ? 'var(--pk-pri)' : 'var(--pk-bd)'};">
+                            <div style="${labelStyle}">${L.label_download_accel_domain}</div>
+                        </div>
+                        <div style="display:grid; grid-template-columns: 1fr 150px; gap:12px; align-items:start;">
+                            <div class="pk-custom-select" id="cs_download_accel_mode" style="margin-top:0; position:relative; z-index:12;">
+                                <div class="pk-select-label">${L.label_download_accel_mode}</div>
+                                <input type="hidden" id="set_download_accel_mode" value="${curDownloadAccelMode}">
+                                <div class="pk-select-trigger"><span id="txt_download_accel_mode"></span>${CONF.crumbIcons.down}</div>
+                                <div class="pk-select-menu">
+                                    <div class="pk-select-item ${curDownloadAccelMode === 'prefix' ? 'act' : ''}" data-val="prefix">${L.opt_download_accel_prefix}</div>
+                                    <div class="pk-select-item ${curDownloadAccelMode === 'query' ? 'act' : ''}" data-val="query">${L.opt_download_accel_query}</div>
+                                </div>
+                            </div>
+                            <div style="position:relative;">
+                                <input type="text" id="set_download_accel_query_param" value="${esc(curDownloadAccelQueryParam)}" placeholder="url"
+                                        autocomplete="off" spellcheck="false"
+                                        style="${inputStyle}">
+                                <div style="${labelStyle}">${L.label_download_accel_query_param}</div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div style="position:relative; transform: translateZ(0);">
                         <div style="position:relative;">
                             <input type="text" id="set_aria_url" value="${esc(curAriaUrl)}" placeholder="http://localhost:6800/jsonrpc"
@@ -33324,6 +36063,47 @@ const openSettingsModal = () => {
                                 style="width:100%; height:44px; padding:0 48px 0 12px; border:2px solid ${curAriaToken ? 'var(--pk-pri)' : 'var(--pk-bd)'}; border-radius:8px; background:var(--pk-bg); color:var(--pk-fg); font-size:14px; font-weight:600; outline:none; transition:border-color 0.2s; box-sizing:border-box; -webkit-text-security: disc; transform: translateZ(0);">
                         <button type="button" id="btn_aria_token_eye" class="pk-token-eye">${CONF.icons.eye}</button>
                         <div class="pk-select-label">${L.label_aria2_token}</div>
+                    </div>
+
+                    <div style="position:relative; padding:25px 15px 15px 15px; border:2px solid var(--pk-bd); border-radius:8px; transition:border-color 0.2s; display:flex; flex-direction:column; gap:14px;" onmouseover="this.style.borderColor='var(--pk-pri)'" onmouseout="this.style.borderColor='var(--pk-bd)'">
+                        <div class="pk-select-label">${L.label_nas_download}</div>
+                        <label for="set_nas_enabled"
+                                style="display:flex; align-items:center; justify-content:space-between; min-height:38px; gap:12px; cursor:pointer; color:var(--pk-fg);">
+                            <span style="font-size:13px; line-height:1.45; user-select:none;">${L.desc_nas_download}</span>
+                            <input type="checkbox" id="set_nas_enabled" ${curNasEnabled ? 'checked' : ''} style="width:18px; height:18px; accent-color:var(--pk-pri); cursor:pointer; flex-shrink:0;">
+                        </label>
+                        <div style="position:relative;">
+                            <input type="text" id="set_nas_url" value="${esc(curNasUrl)}" placeholder="http://NAS-IP:18082"
+                                    autocomplete="off" spellcheck="false" readonly onfocus="this.removeAttribute('readonly');"
+                                    oninput="this.style.borderColor = this.value.trim() ? 'var(--pk-pri)' : 'var(--pk-bd)'"
+                                    style="${inputStyle} border-color:${curNasUrl ? 'var(--pk-pri)' : 'var(--pk-bd)'};">
+                            <div style="${labelStyle}">${L.label_nas_worker_url}</div>
+                        </div>
+                        <div style="position:relative;">
+                            <input type="text" id="set_nas_token" value="${esc(curNasToken)}" placeholder="${L.ph_nas_worker_token || 'Required: same value as PIKPAK_NAS_TOKEN'}"
+                                    autocomplete="off" spellcheck="false" data-lpignore="true" readonly onfocus="this.removeAttribute('readonly');"
+                                    oninput="this.style.borderColor = this.value.trim() ? 'var(--pk-pri)' : 'var(--pk-bd)'"
+                                    style="${inputStyle} border-color:${curNasToken ? 'var(--pk-pri)' : 'var(--pk-bd)'}; -webkit-text-security: disc;">
+                            <div style="${labelStyle}">${L.label_nas_worker_token}</div>
+                        </div>
+                        <div style="display:grid; grid-template-columns: repeat(3, minmax(110px, 1fr)); gap:12px;">
+                            <div style="position:relative;">
+                                <input type="number" id="set_nas_batch_size" value="${curNasBatchSize}" min="1" max="200" step="1"
+                                        style="${inputStyle} font-family:monospace; font-weight:700;">
+                                <div style="${labelStyle}">${L.label_nas_batch_size}</div>
+                            </div>
+                            <div style="position:relative;">
+                                <input type="number" id="set_nas_concurrency" value="${curNasConcurrency}" min="1" max="8" step="1"
+                                        style="${inputStyle} font-family:monospace; font-weight:700;">
+                                <div style="${labelStyle}">${L.label_nas_concurrency}</div>
+                            </div>
+                            <div style="position:relative;">
+                                <input type="number" id="set_nas_segments" value="${curNasSegments}" min="1" max="8" step="1"
+                                        style="${inputStyle} font-family:monospace; font-weight:700;">
+                                <div style="${labelStyle}">${L.label_nas_segments || 'NAS Segments'}</div>
+                            </div>
+                        </div>
+                        <div style="font-size:11px; color:#888; line-height:1.45;">${L.desc_nas_batch_size}<br>${L.desc_nas_concurrency}<br>${L.desc_nas_segments || ''}</div>
                     </div>
 
                     <div style="position:relative; padding:20px 15px 15px 15px; border:2px solid var(--pk-bd); border-radius:8px; transition:border-color 0.2s; transform:translateZ(0); backface-visibility:hidden;" onmouseover="this.style.borderColor='var(--pk-pri)'" onmouseout="this.style.borderColor='var(--pk-bd)'">
@@ -33428,6 +36208,11 @@ const openSettingsModal = () => {
     bindSelect('cs_set_lang', curLang, (val) => { selectedLang = val; });
     bindSelect('cs_set_engine', curEngine, (val) => { selectedEngine = val; });
     bindSelect('cs_default_video_quality', curDefaultVideoQuality, (val) => { selectedDefaultVideoQuality = normalizeDefaultVideoQuality(val); });
+    bindSelect('cs_download_accel_mode', curDownloadAccelMode, (val) => {
+        selectedDownloadAccelMode = normalizeDownloadAccelMode(val);
+        const hidden = m.querySelector('#set_download_accel_mode');
+        if (hidden) hidden.value = selectedDownloadAccelMode;
+    });
 
     const ariaInp = m.querySelector('#set_aria_url');
     const ariaTok = m.querySelector('#set_aria_token');
@@ -33729,7 +36514,7 @@ const openSettingsModal = () => {
             if (k.startsWith('pk_duration_')) return 'history';
             if (k.startsWith('pk_fmod_') || k === 'pk_captured_captcha') return 'cache';
 
-            const ruleKeys =['pk_blacklist', 'pk_blacklist_folders', 'pk_aria2_url', 'pk_aria2_token', 'pk_dl_filter_ext', 'pk_dl_filter_name', 'pk_dl_filter_size_min', 'pk_dl_filter_size_max', 'pk_dl_filter_size_unit', 'pk_search_engine', 'pk_search_history', 'pk_expired_shares', 'pk_share_limits', 'pk_bn_find_hist', 'pk_bn_rep_hist'];
+            const ruleKeys =['pk_blacklist', 'pk_blacklist_folders', 'pk_aria2_url', 'pk_aria2_token', 'pk_nas_enabled', 'pk_nas_worker_url', 'pk_nas_worker_token', 'pk_nas_batch_size', 'pk_nas_concurrency', 'pk_nas_segments', 'pk_download_accel_enable', 'pk_download_accel_domain', 'pk_download_accel_mode', 'pk_download_accel_query_param', 'pk_dl_filter_ext', 'pk_dl_filter_name', 'pk_dl_filter_size_min', 'pk_dl_filter_size_max', 'pk_dl_filter_size_unit', 'pk_search_engine', 'pk_search_history', 'pk_expired_shares', 'pk_share_limits', 'pk_bn_find_hist', 'pk_bn_rep_hist'];
             if (ruleKeys.includes(k) || k.startsWith('pk_scan_last_') || k.startsWith('pk_analyze_last_') || k === 'pk_dup_strictness') return 'rules';
 
             return 'pref';
@@ -33861,6 +36646,16 @@ const openSettingsModal = () => {
             'pk_blacklist_folders',
             'pk_aria2_url',
             'pk_aria2_token',
+            'pk_nas_enabled',
+            'pk_nas_worker_url',
+            'pk_nas_worker_token',
+            'pk_nas_batch_size',
+            'pk_nas_concurrency',
+            'pk_nas_segments',
+            'pk_download_accel_enable',
+            'pk_download_accel_domain',
+            'pk_download_accel_mode',
+            'pk_download_accel_query_param',
             'pk_dl_filter_ext',
             'pk_dl_filter_name',
             'pk_dl_filter_size_min',
@@ -33901,7 +36696,7 @@ const openSettingsModal = () => {
             if (k.startsWith('pk_archive_pwd_') || k === 'pk_pwd_vault' || k === 'pk_pwd_try_count' || k === 'pk_share_limits') return 3;
             if (k.startsWith('pk_duration_')) return 4;
 
-            const ruleKeys = ['pk_blacklist', 'pk_blacklist_folders', 'pk_aria2_url', 'pk_aria2_token', 'pk_dl_filter_ext', 'pk_dl_filter_name', 'pk_dl_filter_size_min', 'pk_dl_filter_size_max', 'pk_dl_filter_size_unit', 'pk_search_engine', 'pk_search_history', 'pk_expired_shares', 'pk_share_limits', 'pk_bn_find_hist', 'pk_bn_rep_hist', 'pk_dup_strictness', 'pk_skip_bl_on_del', 'pk_clipboard_magnet_focus'];
+            const ruleKeys = ['pk_blacklist', 'pk_blacklist_folders', 'pk_aria2_url', 'pk_aria2_token', 'pk_nas_enabled', 'pk_nas_worker_url', 'pk_nas_worker_token', 'pk_nas_batch_size', 'pk_nas_concurrency', 'pk_nas_segments', 'pk_download_accel_enable', 'pk_download_accel_domain', 'pk_download_accel_mode', 'pk_download_accel_query_param', 'pk_dl_filter_ext', 'pk_dl_filter_name', 'pk_dl_filter_size_min', 'pk_dl_filter_size_max', 'pk_dl_filter_size_unit', 'pk_search_engine', 'pk_search_history', 'pk_expired_shares', 'pk_share_limits', 'pk_bn_find_hist', 'pk_bn_rep_hist', 'pk_dup_strictness', 'pk_skip_bl_on_del', 'pk_clipboard_magnet_focus'];
             if (ruleKeys.includes(k) || k.startsWith('pk_scan_last_') || k.startsWith('pk_analyze_last_')) return 2;
 
             return 1;
@@ -33987,6 +36782,16 @@ const openSettingsModal = () => {
                     'pk_blacklist_folders',
                     'pk_aria2_url',
                     'pk_aria2_token',
+                    'pk_nas_enabled',
+                    'pk_nas_worker_url',
+                    'pk_nas_worker_token',
+                    'pk_nas_batch_size',
+                    'pk_nas_concurrency',
+                    'pk_nas_segments',
+                    'pk_download_accel_enable',
+                    'pk_download_accel_domain',
+                    'pk_download_accel_mode',
+                    'pk_download_accel_query_param',
                     'pk_dl_filter_ext',
                     'pk_dl_filter_name',
                     'pk_dl_filter_size_min',
@@ -34195,6 +37000,17 @@ const openSettingsModal = () => {
         const oldTurbo = gmGet('pk_turbo_mode', false);
         const newUrl = m.querySelector('#set_aria_url').value.trim();
         const newToken = m.querySelector('#set_aria_token').value.trim();
+        const newNasEnabled = m.querySelector('#set_nas_enabled').checked;
+        const newNasUrl = normalizeNasWorkerUrl(m.querySelector('#set_nas_url').value.trim());
+        const newNasToken = m.querySelector('#set_nas_token').value.trim();
+        const newNasBatchSize = clampNasBatchSize(m.querySelector('#set_nas_batch_size').value);
+        const newNasConcurrency = clampNasConcurrency(m.querySelector('#set_nas_concurrency').value);
+        const newNasSegments = clampNasSegments(m.querySelector('#set_nas_segments').value);
+        const newDownloadAccelEnable = m.querySelector('#set_download_accel_enable').checked;
+        const rawDownloadAccelDomain = m.querySelector('#set_download_accel_domain').value.trim();
+        const newDownloadAccelDomain = normalizeDownloadAccelBase(rawDownloadAccelDomain);
+        const newDownloadAccelMode = normalizeDownloadAccelMode(selectedDownloadAccelMode || m.querySelector('#set_download_accel_mode')?.value);
+        const newDownloadAccelQueryParam = normalizeDownloadAccelQueryParam(m.querySelector('#set_download_accel_query_param').value.trim());
         const newBlurScope = m.querySelector('#set_thumb_scope').value;
         const newHideButtonText = m.querySelector('#set_hide_button_text').checked;
         const newKeepPos = m.querySelector('#set_keep_pos').checked;
@@ -34204,6 +37020,11 @@ const openSettingsModal = () => {
         const sortPref = m.querySelector('input[name="set_sort_pref"]:checked').value;
         const viewPref = m.querySelector('input[name="set_view_pref"]:checked').value;
         const saveBtn = m.querySelector('#set_save');
+
+        if (newDownloadAccelEnable && !newDownloadAccelDomain) {
+            showAlert(L.label_download_accel_domain || 'Acceleration Domain', L.str_error);
+            return;
+        }
 
         const applyChangesAndClose = async () => {
             gmSet('pk_blur_scope', newBlurScope);
@@ -34247,6 +37068,17 @@ const openSettingsModal = () => {
             gmSet('pk_dl_filter_name', m.querySelector('#set_dl_filter_name').value.trim());
             gmSet('pk_aria2_url', newUrl);
             gmSet('pk_aria2_token', newToken);
+            gmSet('pk_nas_enabled', newNasEnabled);
+            gmSet('pk_nas_worker_url', newNasUrl);
+            gmSet('pk_nas_worker_token', newNasToken);
+            gmSet('pk_nas_batch_size', String(newNasBatchSize));
+            gmSet('pk_nas_concurrency', String(newNasConcurrency));
+            gmSet('pk_nas_segments', String(newNasSegments));
+            gmSet('pk_download_accel_enable', newDownloadAccelEnable);
+            gmSet('pk_download_accel_domain', newDownloadAccelDomain);
+            gmSet('pk_download_accel_mode', newDownloadAccelMode);
+            gmSet('pk_download_accel_query_param', newDownloadAccelQueryParam);
+            refreshDownloadButtonMode();
 
             if (curLang !== selectedLang) {
                 await ensureI18nReady(true, selectedLang);
@@ -34408,6 +37240,15 @@ UI.btnSettings.onclick = (e) => {
 };
 
 const ctx = el.querySelector('#pk-ctx');
+const cleanupTreeContextSelection = () => {
+    if (!S._treeContextActive) return;
+    S._treeContextActive = false;
+    S._treeContextItem = null;
+    setTimeout(() => {
+        renderVisible();
+        updateStat();
+    }, 0);
+};
 
 if (!window.pkPropCache) window.pkPropCache = new Map();
 
@@ -34415,6 +37256,7 @@ ctx.querySelector('#ctx-property').onclick = async () => {
     ctx.style.display = 'none';
     const id = S.getSelectedIds()[0];
     if (!id) return;
+    cleanupTreeContextSelection();
 
     let item = S.itemMap.get(id);
     if (!item) return;
@@ -34697,7 +37539,7 @@ if (btnLocate) {
             const upSep = document.getElementById('pk-up-sep');
             if(upSep) upSep.style.display = 'none';
 
-            [UI.btnNewFolder, UI.btnDel, UI.btnCopy, UI.btnCut, UI.btnPaste, UI.btnRename, UI.btnBulkRename, UI.btnPrune, UI.btnUnzip, UI.btnMigrate, UI.btnRefresh, UI.btnBlacklistManager].forEach(b => { if(b) b.style.display = 'inline-flex'; });
+            [UI.btnNewFolder, UI.btnDel, UI.btnDelDownloaded, UI.btnCopy, UI.btnCut, UI.btnPaste, UI.btnRename, UI.btnBulkRename, UI.btnPrune, UI.btnUnzip, UI.btnMigrate, UI.btnRefresh, UI.btnBlacklistManager].forEach(b => { if(b) b.style.display = 'inline-flex'; });
             if(UI.uploadWrap) UI.uploadWrap.style.display = 'inline-flex';
 
             S.path = pathChain;
@@ -34885,7 +37727,11 @@ if (btnLocate) {
 
 ctx.querySelector('#ctx-ext-play').onclick = () => {
     ctx.style.display = 'none';
-    UI.btnExt.click();
+    const id = S.getSelectedIds()[0];
+    if (!id) return;
+    const item = S.itemMap.get(id) || S.items.find(x => x.id === id);
+    if (!item) return;
+    playVideo(item);
 };
 
 ctx.querySelector('#ctx-open').onclick = () => {
@@ -34893,7 +37739,7 @@ ctx.querySelector('#ctx-open').onclick = () => {
 
     const id = S.getSelectedIds()[0];
     if (!id) return;
-    const item = S.items.find(x => x.id === id);
+    const item = S.itemMap.get(id) || S.items.find(x => x.id === id);
     if (!item) return;
 
     if (S.offlineMode && item.phase !== 'PHASE_TYPE_COMPLETE') {
@@ -34911,11 +37757,18 @@ ctx.querySelector('#ctx-open').onclick = () => {
 
     if (item.kind === 'drive#folder') {
         if (S.loading) return;
-        S.path.push({ id: item.id, name: item.name });
-        load();
+        if (item._tree_context_id) {
+            S._treeContextActive = false;
+            navigateTreeTo(item._tree_context_id);
+        } else {
+            S.path.push({ id: item.id, name: item.name });
+            load();
+        }
     } else {
         const mime = (item.mime_type || "").toLowerCase();
         const name = (item.name || "").toLowerCase();
+        const dur = (item.params && item.params.duration) || 0;
+        const videoExts = ['mp4','mkv','avi','mov','wmv','flv','webm','ts','m4v','3gp'];
 
         if (name.endsWith('.torrent')) {
             handleTorrentFile(item);
@@ -34925,8 +37778,8 @@ ctx.querySelector('#ctx-open').onclick = () => {
             name.endsWith('.zip') || name.endsWith('.rar') || name.endsWith('.7z') || name.endsWith('.tar') || name.endsWith('.gz')) {
             handleOpenArchive(item);
         }
-        else if (mime.startsWith('video')) {
-            playVideo(item);
+        else if (mime.startsWith('video') || dur > 0 || videoExts.some(ext => name.endsWith('.' + ext))) {
+            playWithPotPlayer(item);
         }
         else if (mime.startsWith('image')) {
             showImage(item);
@@ -34941,6 +37794,7 @@ const starBtnCtx = ctx.querySelector('#ctx-star');
 if (starBtnCtx) {
     starBtnCtx.onclick = async (e) => {
         ctx.style.display = 'none';
+        cleanupTreeContextSelection();
 
         const action = e.target.getAttribute('data-action');
         const isStar = (action === 'star');
@@ -35437,12 +38291,27 @@ const handleTorrentFile = async (file) => {
         const magnet = `magnet:?xt=urn:btih:${infoHash}&dn=${encodeURIComponent(file.name)}`;
         fb.update(L.msg_creating_cloud_task);
 
-        await apiAddOfflineTask(magnet, file.parent_id || "");
+        const duplicateCheck = await checkPikPakCloudDuplicateBeforeAdd([{ url: magnet, name: file.name }]);
+        if (!duplicateCheck.proceed) {
+            showToast(getCloudDuplicateTexts().skippedExisting(duplicateCheck.matches.length || 1), 'warning');
+            return;
+        }
+
+        try {
+            await apiAddOfflineTask(magnet, file.parent_id || "");
+        } catch (e) {
+            if (isOfflineTaskExistsError(e)) {
+                showToast(getCloudDuplicateTexts().taskExistsSkipped, 'warning');
+                return;
+            }
+            throw e;
+        }
 
         showToast(L.msg_cloud_task_success.replace('{n}', 1));
         if (typeof globalNeedsSync !== 'undefined') globalNeedsSync = true;
 
         if (S.offlineMode) load(false, true);
+        else if (window.pkSmartRefreshTrigger) window.pkSmartRefreshTrigger(true, { burst: true, reason: 'torrent-add' });
 
     } catch (e) {
         showAlert(`${L.str_error}: ${e.message}`);
@@ -37254,6 +40123,7 @@ ctx.querySelector('#ctx-share').onclick = async () => {
     ctx.style.display = 'none';
     const ids = S.getSelectedIds();
     if (ids.length === 0) return;
+    cleanupTreeContextSelection();
 
     if (ids.length > 100) {
         showToast(L.err_share_limit, 'error');
@@ -37575,6 +40445,7 @@ ctx.querySelector('#ctx-share').onclick = async () => {
 
 ctx.querySelector('#ctx-copy-name').onclick = () => {
     ctx.style.display = 'none';
+    cleanupTreeContextSelection();
     const names = [];
     const ids = S.getSelectedIds();
     ids.forEach(id => {
@@ -37594,31 +40465,47 @@ ctx.querySelector('#ctx-copy-name').onclick = () => {
     }
 };
 
+const clickContextButton = (button) => {
+    if (!button) return;
+    const wasTreeContext = !!S._treeContextActive;
+    const wasDisabled = button.disabled;
+    if (wasTreeContext) button.disabled = false;
+    try {
+        button.click();
+    } finally {
+        if (wasTreeContext) {
+            button.disabled = wasDisabled;
+            cleanupTreeContextSelection();
+        }
+    }
+};
+
 ctx.querySelector('#ctx-down').onclick = () => {
     ctx.style.display = 'none';
-    UI.win.querySelector('#pk-down').click();
+    clickContextButton(UI.win.querySelector('#pk-down'));
 };
 
 ctx.querySelector('#ctx-add-bl').onclick = (e) => {
     ctx.style.display = 'none';
+    cleanupTreeContextSelection();
 
     const action = e.currentTarget.getAttribute('data-action');
 
     processBlacklistAction(action);
 };
-ctx.querySelector('#ctx-copy').onclick = () => { ctx.style.display = 'none'; UI.btnCopy.click(); };
-ctx.querySelector('#ctx-cut').onclick = () => { ctx.style.display = 'none'; UI.btnCut.click(); };
-ctx.querySelector('#ctx-prune').onclick = () => { ctx.style.display = 'none'; UI.btnPrune.click(); };
+ctx.querySelector('#ctx-copy').onclick = () => { ctx.style.display = 'none'; clickContextButton(UI.btnCopy); };
+ctx.querySelector('#ctx-cut').onclick = () => { ctx.style.display = 'none'; clickContextButton(UI.btnCut); };
+ctx.querySelector('#ctx-prune').onclick = () => { ctx.style.display = 'none'; clickContextButton(UI.btnPrune); };
 ctx.querySelector('#ctx-rename').onclick = () => {
     ctx.style.display = 'none';
     if (S.getSelectedCount() > 1) {
-        UI.btnBulkRename.click();
+        clickContextButton(UI.btnBulkRename);
     } else {
-        UI.btnRename.click();
+        clickContextButton(UI.btnRename);
     }
 };
 const ctxDel = ctx.querySelector('#ctx-del');
-ctxDel.onclick = () => { ctx.style.display = 'none'; UI.btnDel.click(); };
+ctxDel.onclick = () => { ctx.style.display = 'none'; clickContextButton(UI.btnDel); };
 if (S.historyMode) {
     const ctxDelTxt = ctxDel.childNodes[1];
     if (ctxDelTxt) ctxDelTxt.textContent = " " + L.btn_clear_history;
@@ -37685,7 +40572,7 @@ const restoreUIState = () => {
     const navs =[UI.btnNavHome, UI.btnNavTrash, UI.btnNavShare, UI.btnNavStarred, UI.btnNavRecent, UI.btnNavHistory, UI.btnNavOffline, UI.btnNavUpload];
     navs.forEach(n => { if(n) n.classList.remove('act'); });
 
-    const stdBtns =[UI.btnNewFolder, UI.btnDel, UI.btnCopy, UI.btnCut, UI.btnPaste, UI.btnRename, UI.btnBulkRename, UI.btnPrune, UI.btnUnzip, UI.btnMigrate, UI.btnBlacklistManager];
+    const stdBtns =[UI.btnNewFolder, UI.btnDel, UI.btnDelDownloaded, UI.btnCopy, UI.btnCut, UI.btnPaste, UI.btnRename, UI.btnBulkRename, UI.btnPrune, UI.btnUnzip, UI.btnMigrate, UI.btnBlacklistManager];
     const shareBtns =[UI.btnCancelShare];
     const upBtns =[UI.btnUpPause, UI.btnUpStart, UI.btnUpDel, UI.btnUpClearAll];
     const upSep = el.querySelector('#pk-up-sep');
@@ -37715,7 +40602,7 @@ const restoreUIState = () => {
     else if (S.offlineMode) {
         if(UI.btnNavOffline) UI.btnNavOffline.classList.add('act');
         if (S.path[0]) S.path[0].name = L.title_offline;
-        if(UI.bottomGrp) UI.bottomGrp.style.display = 'flex';[UI.btnNewFolder, UI.btnCopy, UI.btnCut, UI.btnPaste, UI.btnRename, UI.btnBulkRename, UI.btnPrune, UI.btnUnzip, UI.btnMigrate].forEach(b => { if(b) b.style.display = 'none'; });
+        if(UI.bottomGrp) UI.bottomGrp.style.display = 'flex';[UI.btnNewFolder, UI.btnDelDownloaded, UI.btnCopy, UI.btnCut, UI.btnPaste, UI.btnRename, UI.btnBulkRename, UI.btnPrune, UI.btnUnzip, UI.btnMigrate].forEach(b => { if(b) b.style.display = 'none'; });
         [UI.btnDel, UI.btnRefresh, UI.btnBlacklistManager].forEach(b => { if(b) b.style.display = 'inline-flex'; });
         shareBtns.forEach(b => { if(b) b.style.display = 'none'; });
         [UI.btnAria2, UI.btnDown].forEach(b => { if(b) b.style.display = 'none'; });
@@ -37895,11 +40782,68 @@ const startSmartRefresh = () => {
 
     let silentAbortController = null;
     let retryTimer = null;
+    let autoRefreshTimer = null;
+    let refreshBurstSeq = 0;
+    let refreshBurstTimers = [];
+    let lastRefreshBurstAt = 0;
+    let smartRefreshInFlight = false;
+    let smartRefreshRunSeq = 0;
     let lastUserInteractionTime = 0;
 
     const updateInteractionTime = () => { lastUserInteractionTime = Date.now(); };
     el.addEventListener('mousedown', updateInteractionTime, true);
     el.addEventListener('keydown', updateInteractionTime, true);
+
+    const getSmartRefreshItemCount = () => Array.isArray(S.items) ? S.items.length : 0;
+
+    const getAutoRefreshDelay = () => {
+        if (document.hidden) return 60000;
+        if (S.loading || S.scanning || S.dupMode || S.isFlattened || S.historyMode || S.uploadMode) return 60000;
+        if (S.offlineMode) return 15000;
+        const count = getSmartRefreshItemCount();
+        if (count <= 500) return 15000;
+        if (count <= 2000) return 25000;
+        if (count <= 5000) return 45000;
+        return 60000;
+    };
+
+    const clearRefreshBurstTimers = () => {
+        refreshBurstTimers.forEach(timer => clearTimeout(timer));
+        refreshBurstTimers = [];
+    };
+
+    const getRefreshBurstDelays = (isForce = false) => {
+        const count = getSmartRefreshItemCount();
+        if (count > 5000) return isForce ? [2000, 15000, 45000] : [3000, 30000];
+        if (count > 2000) return isForce ? [1500, 8000, 25000] : [2000, 15000, 45000];
+        return isForce ? [900, 3500, 9000, 20000] : [1200, 6000, 18000];
+    };
+
+    const scheduleRefreshBurst = (reason = 'auto', isForce = false) => {
+        if (document.hidden) return;
+        const now = Date.now();
+        if (!isForce && now - lastRefreshBurstAt < 5000) return;
+        lastRefreshBurstAt = now;
+
+        const seq = ++refreshBurstSeq;
+        clearRefreshBurstTimers();
+        getRefreshBurstDelays(isForce).forEach(delay => {
+            const timer = setTimeout(() => {
+                if (seq !== refreshBurstSeq || document.hidden) return;
+                checkAndRefresh(false, false);
+            }, delay);
+            refreshBurstTimers.push(timer);
+        });
+    };
+
+    const scheduleNextAutoRefresh = () => {
+        if (autoRefreshTimer) clearTimeout(autoRefreshTimer);
+        autoRefreshTimer = setTimeout(async () => {
+            autoRefreshTimer = null;
+            await checkAndRefresh(false, false);
+            scheduleNextAutoRefresh();
+        }, getAutoRefreshDelay());
+    };
 
     const diffWorkerBlob = new Blob([`
         self.onmessage = function(e) {
@@ -37983,6 +40927,10 @@ const startSmartRefresh = () => {
 
         if (cur.id === 'virtual_search_root' || cur.id === 'analyze_root' || cur.id === 'upload_root') return;
 
+        if (smartRefreshInFlight && !bypassLock) return;
+        const refreshRunSeq = ++smartRefreshRunSeq;
+        smartRefreshInFlight = true;
+
         if (silentAbortController) silentAbortController.abort();
         silentAbortController = new AbortController();
         const signal = silentAbortController.signal;
@@ -38040,6 +40988,8 @@ const startSmartRefresh = () => {
                         created_time: t.created_time,
                         modified_time: t.updated_time || ref.modified_time || '',
                         file_id: t.file_id || '',
+                        parent_id: ref.parent_id || '',
+                        reference_kind: ref.kind || '',
                         source_url: (t.params && t.params.url) ? t.params.url : '',
                         params: Object.assign({}, t.params || {}, ref.params || {}),
                         mime_type: ref.mime_type || '',
@@ -38092,7 +41042,7 @@ const startSmartRefresh = () => {
                             created_time: t.created_time,
                             modified_time: t.updated_time || ref.modified_time || t.created_time,
                             mime_type: mime,
-                            parent_id: '',
+                            parent_id: ref.parent_id || '',
                             starred: !!(ref.starred || (ref.tags && ref.tags.some(tg => tg.name === 'STAR'))),
                             trashed: false,
                             params: Object.assign({}, t.params || {}, ref.params || {}),
@@ -38263,9 +41213,12 @@ const startSmartRefresh = () => {
                 diffWorker.postMessage({ oldList: simplify(S.items), newList: simplify(allFetchedItems) });
             }
         } catch (e) { }
+        finally {
+            if (refreshRunSeq === smartRefreshRunSeq) smartRefreshInFlight = false;
+        }
     };
 
-    window.pkSmartRefreshTrigger = (isForce = false) => {
+    window.pkSmartRefreshTrigger = (isForce = false, opts = {}) => {
         const session = globalCache.get('offline_session');
         if (S.offlineMode && (!session || !session.completed) && !isForce) {
             return;
@@ -38278,28 +41231,40 @@ const startSmartRefresh = () => {
         }
 
         checkAndRefresh(false, isForce);
+        if (isForce || opts.burst) scheduleRefreshBurst(opts.reason || 'trigger', !!isForce);
+        scheduleNextAutoRefresh();
     };
 
     const onVisibilityChange = () => {
+        if (document.hidden) return;
         if (retryTimer) clearTimeout(retryTimer);
         checkAndRefresh(false, false);
+        scheduleRefreshBurst('visible', false);
         runWatchdogAudit();
     };
 
-    const uiSyncTimer = setInterval(() => checkAndRefresh(false, true), 60000);
+    const onFocusRefresh = () => scheduleRefreshBurst('focus', false);
+    const onPageShowRefresh = () => scheduleRefreshBurst('pageshow', false);
+
+    scheduleNextAutoRefresh();
 
     const watchdogTimer = setInterval(runWatchdogAudit, 60000);
 
     document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('focus', onFocusRefresh);
+    window.addEventListener('pageshow', onPageShowRefresh);
 
     return {
         handler: onVisibilityChange,
         abort: () => {
             if(silentAbortController) silentAbortController.abort();
             if(retryTimer) clearTimeout(retryTimer);
-            if(uiSyncTimer) clearInterval(uiSyncTimer);
+            if(autoRefreshTimer) clearTimeout(autoRefreshTimer);
+            clearRefreshBurstTimers();
             if(watchdogTimer) clearInterval(watchdogTimer);
             document.removeEventListener('visibilitychange', onVisibilityChange);
+            window.removeEventListener('focus', onFocusRefresh);
+            window.removeEventListener('pageshow', onPageShowRefresh);
             el.removeEventListener('mousedown', updateInteractionTime, true);
             el.removeEventListener('keydown', updateInteractionTime, true);
             if (diffWorker) diffWorker.terminate();
@@ -38562,6 +41527,16 @@ UI.btnClose.onclick = (e) => {
 
 await load(false, true);
 
+const pkExternalAddPayload = readPkExternalAddPayload();
+if (pkExternalAddPayload) {
+    setTimeout(() => {
+        submitPkExternalAddPayload(pkExternalAddPayload).catch(e => {
+            console.error('[PikPak External Add] Payload processing failed:', e);
+            showToast(`${L.str_error}: ${e.message || e}`, 'error');
+        });
+    }, 350);
+}
+
 if (globalSavedState && globalSavedState.scrollTop !== undefined) {
     setTimeout(() => {
         if (typeof UI !== 'undefined' && UI.vp) {
@@ -38708,6 +41683,9 @@ let globalLineageMap = new Map();
 let globalParentIndex = new Map();
 let globalTombstoneCache = new Map();
 let globalDirtyFolders = new Set();
+let globalPcDownloadFileIds = new Set();
+let globalPcDownloadParentIds = new Set();
+let globalPcDownloadIndexLoaded = false;
 let globalNeedsSync = false;
 let isGlobalIndexReady = false;
 let hasShownGlobalWarnSession = false;
@@ -39053,6 +42031,7 @@ return {
         return undefined;
     })(),
     modified_time: final_modified_time,
+    created_time: f.created_time || f.create_time || f.created_at || '',
     thumbnail_link,
     icon_link,
     mime_type,
@@ -39268,10 +42247,11 @@ window.pkScheduleResumeTasks = (reason = 'visibility') => {
 };
 
 const isTurbo = typeof GM_getValue !== 'undefined' ? GM_getValue('pk_turbo_mode', false) : false;
-if (isTurbo) {
-    const startTurbo = async () => {
+const hasExternalAdd = hasPkExternalAddPayload();
+if (isTurbo || hasExternalAdd) {
+    const startAutoOpen = async () => {
         if (typeof window.pkIsAuthRecoveryActive === 'function' && window.pkIsAuthRecoveryActive()) {
-            setTimeout(startTurbo, 900);
+            setTimeout(startAutoOpen, 900);
             return;
         }
         const preload = preLoadRootFiles();
@@ -39280,7 +42260,7 @@ if (isTurbo) {
             await openManager(globalCache, preload);
         }
     };
-    setTimeout(startTurbo, 100);
+    setTimeout(startAutoOpen, hasExternalAdd ? 50 : 100);
 } else {
     const startPreload = () => {
         if (typeof window.pkIsAuthRecoveryActive === 'function' && window.pkIsAuthRecoveryActive()) {
