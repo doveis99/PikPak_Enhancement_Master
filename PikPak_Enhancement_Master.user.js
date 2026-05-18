@@ -30125,9 +30125,46 @@ const getNasDisplayItem = (job) => {
         null;
 };
 
+const getNasDisplayItems = (job, maxItems = 4) => {
+    const items = Array.isArray(job && job.items) ? job.items : [];
+    if (!items.length) return [];
+    const byStatus = (status) => items.filter(item => item && item.status === status);
+    const doneItems = [...items].reverse().filter(item => item && (item.status === 'done' || item.status === 'skipped_existing'));
+    const ordered = [
+        ...byStatus('failed'),
+        ...byStatus('canceled'),
+        ...byStatus('running'),
+        ...byStatus('queued'),
+        ...doneItems
+    ];
+    const seen = new Set();
+    const out = [];
+    for (const item of ordered) {
+        const key = String((item && item.id) || `${item && item.relativePath || ''}:${out.length}`);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(item);
+        if (out.length >= maxItems) break;
+    }
+    return out;
+};
+
 const getNasItemLabel = (item) => {
     if (!item) return '';
     return String(item.relativePath || item.name || '').replace(/\\/g, '/');
+};
+
+const getNasStatusLabel = (status) => {
+    switch (String(status || '')) {
+        case 'running': return L.lbl_task_run || 'Running';
+        case 'queued': return L.msg_task_waiting || 'Waiting';
+        case 'failed': return L.lbl_task_fail || 'Failed';
+        case 'canceled': return String(L.str_aria2_aborted || '').replace(/[()（）]/g, '') || L.btn_cancel || 'Canceled';
+        case 'done':
+        case 'skipped_existing':
+            return L.lbl_task_ok || 'Completed';
+        default: return String(status || '');
+    }
 };
 
 const formatNasJobProgress = (job, prefix = '') => {
@@ -30139,7 +30176,9 @@ const formatNasJobProgress = (job, prefix = '') => {
     const bytesDone = job && job.bytesDone ? fmtSize(job.bytesDone) : '';
     const bytesTotal = job && job.bytesTotal ? fmtSize(job.bytesTotal) : '';
     const sizeText = bytesTotal ? ` | ${bytesDone} / ${bytesTotal}` : '';
-    return `${prefix || L.msg_nas_progress || 'NAS download'} ${finished} / ${total}${sizeText}`;
+    const failedText = failed > 0 ? ` | ${getNasStatusLabel('failed')} ${failed}` : '';
+    const canceledText = canceled > 0 ? ` | ${getNasStatusLabel('canceled')} ${canceled}` : '';
+    return `${prefix || L.msg_nas_progress || 'NAS download'} ${finished} / ${total}${sizeText}${failedText}${canceledText}`;
 };
 
 const formatNasJobProgressHtml = (job, prefix = '', metrics = null, runtimeInfo = null) => {
@@ -30157,7 +30196,7 @@ const formatNasJobProgressHtml = (job, prefix = '', metrics = null, runtimeInfo 
     const itemBytesDone = nasNumber(item && item.bytesDone);
     const itemBytesTotal = nasNumber(item && (item.bytesTotal || item.size));
     const itemPercent = nasProgressPercent(itemBytesDone, itemBytesTotal);
-    const status = item && item.status ? String(item.status) : '';
+    const status = item && item.status ? getNasStatusLabel(item.status) : '';
     const sizeText = bytesTotal ? `${fmtSize(bytesDone)} / ${fmtSize(bytesTotal)}` : '';
     const itemSizeText = itemBytesTotal ? `${fmtSize(itemBytesDone)} / ${fmtSize(itemBytesTotal)}` : '';
     const errorText = item && item.error ? String(item.error) : '';
@@ -30171,18 +30210,59 @@ const formatNasJobProgressHtml = (job, prefix = '', metrics = null, runtimeInfo 
     const concurrencyText = workerConcurrency > 0 ? `${L.label_nas_worker_concurrency || 'Concurrency'} ${running}/${workerConcurrency}` : '';
     const subText = [status, itemSizeText || sizeText, speedText, etaText, modeText].filter(Boolean).join(' | ');
     const detailText = errorText || subText;
+    const displayLimit = Math.max(3, Math.min(6, (workerConcurrency || running || 3) + failed + canceled));
+    const displayItems = getNasDisplayItems(job, displayLimit);
+    const displayedFailed = displayItems.filter(row => row && row.status === 'failed').length;
+    const displayedCanceled = displayItems.filter(row => row && row.status === 'canceled').length;
+    const displayedRunning = displayItems.filter(row => row && row.status === 'running').length;
+    const hiddenFailedCount = Math.max(0, failed - displayedFailed);
+    const hiddenCanceledCount = Math.max(0, canceled - displayedCanceled);
+    const hiddenRunningCount = Math.max(0, running - displayedRunning);
+    const headerStats = [
+        concurrencyText ? `<span>${esc(concurrencyText)}</span>` : '',
+        progressText ? `<span>${esc(progressText)}</span>` : '',
+        failed > 0 ? `<span style="color:#d93025; font-weight:900;">${esc(getNasStatusLabel('failed'))} ${failed}</span>` : '',
+        canceled > 0 ? `<span style="color:#d93025; font-weight:900;">${esc(getNasStatusLabel('canceled'))} ${canceled}</span>` : ''
+    ].filter(Boolean).join('<span style="opacity:.55;"> | </span>');
+    const itemRows = displayItems.map(row => {
+        const label = getNasItemLabel(row) || `${finished} / ${total}`;
+        const rowBytesDone = nasNumber(row && row.bytesDone);
+        const rowBytesTotal = nasNumber(row && (row.bytesTotal || row.size));
+        const rowPercent = nasProgressPercent(rowBytesDone, rowBytesTotal);
+        const rowStatus = getNasStatusLabel(row && row.status);
+        const rowSizeText = rowBytesTotal ? `${fmtSize(rowBytesDone)} / ${fmtSize(rowBytesTotal)}` : '';
+        const rowProgressText = rowBytesTotal ? `${rowPercent}%` : '';
+        const rowErrorText = row && row.error ? String(row.error) : '';
+        const rowMeta = rowErrorText || [rowStatus, rowSizeText, rowProgressText].filter(Boolean).join(' | ');
+        const isProblem = row && (row.status === 'failed' || row.status === 'canceled');
+        const rowColor = isProblem ? '#d93025' : 'inherit';
+        const rowWeight = isProblem || (row && row.status === 'running') ? '800' : '600';
+        return `
+            <div style="display:grid; grid-template-columns:minmax(0, 1fr) auto; gap:10px; align-items:center; min-width:0;">
+                <div title="${esc(label)}" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:${rowWeight}; color:${rowColor};">${esc(label)}</div>
+                <div title="${esc(rowMeta)}" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:190px; opacity:.82; font-size:12px; font-variant-numeric:tabular-nums; color:${rowColor};">${esc(rowMeta)}</div>
+            </div>
+        `;
+    }).join('');
+    const moreText = [
+        hiddenFailedCount > 0 ? `+${hiddenFailedCount} ${getNasStatusLabel('failed')}` : '',
+        hiddenCanceledCount > 0 ? `+${hiddenCanceledCount} ${getNasStatusLabel('canceled')}` : '',
+        hiddenRunningCount > 0 ? `+${hiddenRunningCount} ${getNasStatusLabel('running')}` : ''
+    ].filter(Boolean).join(' | ');
 
     return `
         <div style="width:min(520px, calc(100vw - 96px)); white-space:normal;">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px;">
                 <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${esc(prefix || L.msg_nas_progress || 'NAS download')} ${finished} / ${total}</span>
-                <span style="flex:0 0 auto; font-variant-numeric:tabular-nums;">${esc([concurrencyText, progressText].filter(Boolean).join(' | '))}</span>
+                <span style="flex:0 0 auto; font-variant-numeric:tabular-nums;">${headerStats}</span>
             </div>
             <div style="height:7px; border-radius:999px; overflow:hidden; background:rgba(128,128,128,.28); margin-bottom:6px;">
                 <div style="width:${barWidth}%; height:100%; border-radius:999px; background:var(--pk-pri); transition:width .25s ease;"></div>
             </div>
-            <div title="${esc(fileLabel)}" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700;">${esc(fileLabel)}</div>
-            ${detailText ? `<div title="${esc(detailText)}" style="opacity:.78; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; margin-top:2px;">${esc(detailText)}</div>` : ''}
+            <div style="display:flex; flex-direction:column; gap:4px;">
+                ${itemRows || `<div title="${esc(fileLabel)}" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700;">${esc(fileLabel)}</div>`}
+            </div>
+            ${moreText ? `<div style="opacity:.78; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; margin-top:4px;">${esc(moreText)}</div>` : (!itemRows && detailText ? `<div title="${esc(detailText)}" style="opacity:.78; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; margin-top:2px;">${esc(detailText)}</div>` : '')}
         </div>
     `;
 };
